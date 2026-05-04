@@ -314,7 +314,7 @@ lock  = 0xFF
 
 ## Сборка
 
-Зависимости:
+Прошивка собирается обычным AVR toolchain под `ATmega8`:
 
 - `avr-gcc`;
 - `avr-libc`;
@@ -323,22 +323,118 @@ lock  = 0xFF
 - `make`;
 - `avrdude` для прошивки.
 
+### Windows
+
+Самый простой вариант - пакет ZakKemble AVR-GCC:
+
+```powershell
+winget install ZakKemble.avr-gcc
+```
+
+После установки открыть новый PowerShell и проверить инструменты:
+
+```powershell
+avr-gcc --version
+make --version
+avrdude -?
+```
+
+Если `make` или `avrdude` не находятся, добавить каталог `bin` установленного AVR-GCC в `PATH` или запускать инструменты по полному пути. Для пакета из `winget` путь обычно похож на:
+
+```powershell
+$env:LOCALAPPDATA\Microsoft\WinGet\Packages\ZakKemble.avr-gcc_Microsoft.Winget.Source_8wekyb3d8bbwe\avr-gcc-14.1.0-x64-windows\bin
+```
+
 Сборка:
 
 ```powershell
 make
 ```
 
-Результат:
-
-- `TC-01.elf`;
-- `TC-01.hex`.
-
-Очистка:
+Очистка и повторная сборка:
 
 ```powershell
 make clean
+make
 ```
+
+### Linux
+
+Debian/Ubuntu:
+
+```bash
+sudo apt update
+sudo apt install gcc-avr avr-libc binutils-avr make avrdude srecord
+```
+
+Arch Linux:
+
+```bash
+sudo pacman -S avr-gcc avr-libc avr-binutils make avrdude srecord
+```
+
+Fedora:
+
+```bash
+sudo dnf install avr-gcc avr-libc avr-binutils make avrdude srecord
+```
+
+Сборка:
+
+```bash
+make clean
+make
+```
+
+Результат сборки:
+
+- `TC-01.elf` - ELF-файл для отладки и просмотра размера;
+- `TC-01.hex` - Intel HEX для записи во Flash ATmega8A.
+
+Ожидаемый размер текущей версии:
+
+```text
+text = 5316
+data = 0
+bss  = 2
+dec  = 5318
+```
+
+## Разбивка HEX на чанки
+
+Обычно прошивку можно писать одним файлом `TC-01.hex`. Чанки нужны только если программатор или схема зависает на длинной записи/проверке, чаще всего это встречается с ArduinoISP.
+
+Для разбиения удобно использовать `srec_cat` из пакета `srecord`. ATmega8 имеет `8 KB` Flash, поэтому можно разбить файл на блоки по `1 KB`.
+
+Windows PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force chunks | Out-Null
+srec_cat TC-01.hex -Intel -crop 0x0000 0x0400 -o chunks/TC-01_0000_03ff.hex -Intel
+srec_cat TC-01.hex -Intel -crop 0x0400 0x0800 -o chunks/TC-01_0400_07ff.hex -Intel
+srec_cat TC-01.hex -Intel -crop 0x0800 0x0c00 -o chunks/TC-01_0800_0bff.hex -Intel
+srec_cat TC-01.hex -Intel -crop 0x0c00 0x1000 -o chunks/TC-01_0c00_0fff.hex -Intel
+srec_cat TC-01.hex -Intel -crop 0x1000 0x1400 -o chunks/TC-01_1000_13ff.hex -Intel
+srec_cat TC-01.hex -Intel -crop 0x1400 0x1800 -o chunks/TC-01_1400_17ff.hex -Intel
+srec_cat TC-01.hex -Intel -crop 0x1800 0x1c00 -o chunks/TC-01_1800_1bff.hex -Intel
+srec_cat TC-01.hex -Intel -crop 0x1c00 0x2000 -o chunks/TC-01_1c00_1fff.hex -Intel
+```
+
+Linux:
+
+```bash
+mkdir -p chunks
+srec_cat TC-01.hex -Intel -crop 0x0000 0x0400 -o chunks/TC-01_0000_03ff.hex -Intel
+srec_cat TC-01.hex -Intel -crop 0x0400 0x0800 -o chunks/TC-01_0400_07ff.hex -Intel
+srec_cat TC-01.hex -Intel -crop 0x0800 0x0c00 -o chunks/TC-01_0800_0bff.hex -Intel
+srec_cat TC-01.hex -Intel -crop 0x0c00 0x1000 -o chunks/TC-01_0c00_0fff.hex -Intel
+srec_cat TC-01.hex -Intel -crop 0x1000 0x1400 -o chunks/TC-01_1000_13ff.hex -Intel
+srec_cat TC-01.hex -Intel -crop 0x1400 0x1800 -o chunks/TC-01_1400_17ff.hex -Intel
+srec_cat TC-01.hex -Intel -crop 0x1800 0x1c00 -o chunks/TC-01_1800_1bff.hex -Intel
+srec_cat TC-01.hex -Intel -crop 0x1c00 0x2000 -o chunks/TC-01_1c00_1fff.hex -Intel
+```
+
+Пустые верхние чанки допустимы, если прошивка занимает меньше 8 KB. Для записи блоками первый блок пишется с очисткой чипа, остальные - с `-D`, чтобы не стирать уже записанные страницы.
 
 ## Прошивка через ArduinoISP
 
@@ -383,11 +479,45 @@ lock  = 0xff
 avrdude -c stk500v1 -P COM3 -b 19200 -p m8 -U flash:w:TC-01.hex:i -U lfuse:w:0xE3:m -U hfuse:w:0x99:m
 ```
 
+Для Linux порт обычно выглядит как `/dev/ttyACM0` или `/dev/ttyUSB0`:
+
+```bash
+avrdude -c stk500v1 -P /dev/ttyACM0 -b 19200 -p m8 -U flash:w:TC-01.hex:i -U lfuse:w:0xE3:m -U hfuse:w:0x99:m
+```
+
 На этой схеме ArduinoISP может зависать при длинном чтении Flash во время verify. Если verify зависает, использовать запись короткими блоками из каталога `chunks/` с отключенной проверкой чтением:
 
 - первый блок пишется с chip erase;
 - остальные блоки пишутся с `-D`;
 - все блоки пишутся с `-V`.
+
+Windows PowerShell:
+
+```powershell
+avrdude -c stk500v1 -P COM3 -b 19200 -p m8 -V -U flash:w:chunks/TC-01_0000_03ff.hex:i
+avrdude -c stk500v1 -P COM3 -b 19200 -p m8 -D -V -U flash:w:chunks/TC-01_0400_07ff.hex:i
+avrdude -c stk500v1 -P COM3 -b 19200 -p m8 -D -V -U flash:w:chunks/TC-01_0800_0bff.hex:i
+avrdude -c stk500v1 -P COM3 -b 19200 -p m8 -D -V -U flash:w:chunks/TC-01_0c00_0fff.hex:i
+avrdude -c stk500v1 -P COM3 -b 19200 -p m8 -D -V -U flash:w:chunks/TC-01_1000_13ff.hex:i
+avrdude -c stk500v1 -P COM3 -b 19200 -p m8 -D -V -U flash:w:chunks/TC-01_1400_17ff.hex:i
+avrdude -c stk500v1 -P COM3 -b 19200 -p m8 -D -V -U flash:w:chunks/TC-01_1800_1bff.hex:i
+avrdude -c stk500v1 -P COM3 -b 19200 -p m8 -D -V -U flash:w:chunks/TC-01_1c00_1fff.hex:i
+avrdude -c stk500v1 -P COM3 -b 19200 -p m8 -U lfuse:w:0xE3:m -U hfuse:w:0x99:m
+```
+
+Linux:
+
+```bash
+avrdude -c stk500v1 -P /dev/ttyACM0 -b 19200 -p m8 -V -U flash:w:chunks/TC-01_0000_03ff.hex:i
+avrdude -c stk500v1 -P /dev/ttyACM0 -b 19200 -p m8 -D -V -U flash:w:chunks/TC-01_0400_07ff.hex:i
+avrdude -c stk500v1 -P /dev/ttyACM0 -b 19200 -p m8 -D -V -U flash:w:chunks/TC-01_0800_0bff.hex:i
+avrdude -c stk500v1 -P /dev/ttyACM0 -b 19200 -p m8 -D -V -U flash:w:chunks/TC-01_0c00_0fff.hex:i
+avrdude -c stk500v1 -P /dev/ttyACM0 -b 19200 -p m8 -D -V -U flash:w:chunks/TC-01_1000_13ff.hex:i
+avrdude -c stk500v1 -P /dev/ttyACM0 -b 19200 -p m8 -D -V -U flash:w:chunks/TC-01_1400_17ff.hex:i
+avrdude -c stk500v1 -P /dev/ttyACM0 -b 19200 -p m8 -D -V -U flash:w:chunks/TC-01_1800_1bff.hex:i
+avrdude -c stk500v1 -P /dev/ttyACM0 -b 19200 -p m8 -D -V -U flash:w:chunks/TC-01_1c00_1fff.hex:i
+avrdude -c stk500v1 -P /dev/ttyACM0 -b 19200 -p m8 -U lfuse:w:0xE3:m -U hfuse:w:0x99:m
+```
 
 После записи блоками проверять только сигнатуру, fuse и lock, не делать длинный dump/verify Flash.
 
@@ -396,6 +526,89 @@ avrdude -c stk500v1 -P COM3 -b 19200 -p m8 -U flash:w:TC-01.hex:i -U lfuse:w:0xE
 ```powershell
 avrdude -C "$env:LOCALAPPDATA\Microsoft\WinGet\Packages\ZakKemble.avr-gcc_Microsoft.Winget.Source_8wekyb3d8bbwe\avr-gcc-14.1.0-x64-windows\bin\avrdude.conf" -c stk500v1 -P COM3 -b 19200 -p m8 -U lfuse:r:-:h -U hfuse:r:-:h -U lock:r:-:h
 ```
+
+## Прошивка через USBasp / AVRASP / USBASP 2.0
+
+USBasp, AVRASP и многие платы с надписью `USBASP 2.0` в `avrdude` обычно используются как программатор `usbasp`.
+
+Подключение ISP:
+
+| USBasp | ATmega8A |
+| --- | --- |
+| `MOSI` | `MOSI/PB3`, pin 17 |
+| `MISO` | `MISO/PB4`, pin 18 |
+| `SCK` | `SCK/PB5`, pin 19 |
+| `RST` / `RESET` | `RESET`, pin 1 |
+| `VCC` | `VCC`, pin 7 и `AVCC`, pin 20 |
+| `GND` | `GND`, pins 8 и 22 |
+
+Если плата питается отдельно, не подключать `VCC` от программатора, оставить только общую землю `GND`.
+
+Проверка связи:
+
+```powershell
+avrdude -c usbasp -p m8 -U lfuse:r:-:h -U hfuse:r:-:h -U lock:r:-:h
+```
+
+Запись прошивки и fuse:
+
+```powershell
+avrdude -c usbasp -p m8 -U flash:w:TC-01.hex:i -U lfuse:w:0xE3:m -U hfuse:w:0x99:m
+```
+
+На Linux команды такие же. Если обычный пользователь не имеет доступа к USBasp, запускать через `sudo` или добавить udev-правило:
+
+```bash
+sudo avrdude -c usbasp -p m8 -U flash:w:TC-01.hex:i -U lfuse:w:0xE3:m -U hfuse:w:0x99:m
+```
+
+Если USBasp старый и `avrdude` пишет предупреждение про `cannot set sck period`, это не всегда ошибка. Если связь нестабильна, поставить перемычку `slow SCK` на USBasp или добавить ключ `-B 10`:
+
+```bash
+avrdude -c usbasp -B 10 -p m8 -U flash:w:TC-01.hex:i -U lfuse:w:0xE3:m -U hfuse:w:0x99:m
+```
+
+## Прошивка через AVRISP / AVRISP mkII
+
+Для оригинального Atmel/Microchip AVRISP mkII и совместимых программаторов в `avrdude` используется `-c avrispmkII`.
+
+Проверка:
+
+```bash
+avrdude -c avrispmkII -P usb -p m8 -U lfuse:r:-:h -U hfuse:r:-:h -U lock:r:-:h
+```
+
+Запись:
+
+```bash
+avrdude -c avrispmkII -P usb -p m8 -U flash:w:TC-01.hex:i -U lfuse:w:0xE3:m -U hfuse:w:0x99:m
+```
+
+Если используется старый последовательный AVRISP/STK500-совместимый программатор, команда обычно выглядит так:
+
+```bash
+avrdude -c avrisp -P COM3 -b 19200 -p m8 -U flash:w:TC-01.hex:i -U lfuse:w:0xE3:m -U hfuse:w:0x99:m
+```
+
+На Linux вместо `COM3` использовать свой порт, например `/dev/ttyUSB0`.
+
+## ST-Link V2
+
+ST-Link V2 напрямую не прошивает `ATmega8A` по AVR ISP. Он рассчитан на STM8/STM32 через SWIM/SWD, а у ATmega8A используется SPI ISP.
+
+Использовать ST-Link V2 для этой платы можно только если он перепрошит альтернативной прошивкой, которая превращает его в AVR ISP-совместимый программатор. В обычном состоянии для TC-01 нужны ArduinoISP, USBasp/AVRASP, AVRISP mkII или другой программатор, поддерживаемый `avrdude` для `-p m8`.
+
+## Fuse-биты
+
+Текущая прошивка рассчитана на внутренний RC-генератор около `4 MHz`:
+
+```text
+lfuse = 0xE3
+hfuse = 0x99
+lock  = 0xFF
+```
+
+Перед записью fuse желательно сначала прочитать текущие значения. Неверные fuse могут отключить ISP или выбрать неподключенный источник тактирования.
 
 ## Диагностика замка
 
