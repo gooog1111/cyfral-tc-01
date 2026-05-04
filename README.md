@@ -1,7 +1,7 @@
 # Цифрал TC-01
 
 [![Latest release](https://img.shields.io/github/v/release/gooog1111/cyfral-tc-01?label=latest%20release)](https://github.com/gooog1111/cyfral-tc-01/releases/latest)
-[![GitHub stars](https://img.shields.io/github/stars/gooog1111/cyfral-tc-01?style=social)](https://github.com/gooog1111/cyfral-tc-01/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/gooog1111/cyfral-tc-01?style=social&cacheSeconds=3600)](https://github.com/gooog1111/cyfral-tc-01/stargazers)
 ![Repository visits](https://visitor-badge.laobi.icu/badge?page_id=gooog1111.cyfral-tc-01)
 
 Ошибки, предложения по добавлению функционала и другие задачи описывайте в [Issues](https://github.com/gooog1111/cyfral-tc-01/issues).
