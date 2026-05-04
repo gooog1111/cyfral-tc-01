@@ -1,0 +1,573 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TC-01 README</title><style>body{font-family:Segoe UI,Arial,sans-serif;line-height:1.55;max-width:1100px;margin:0 auto;padding:32px;color:#111827;background:#f8fafc}main{background:white;padding:32px;border:1px solid #e5e7eb;border-radius:8px}pre,code{font-family:Consolas,monospace}pre{background:#0f172a;color:#e5e7eb;padding:14px;overflow:auto;border-radius:6px}code{background:#eef2ff;padding:1px 4px;border-radius:4px}pre code{background:transparent;padding:0}table{border-collapse:collapse;width:100%;margin:16px 0}td,th{border:1px solid #d1d5db;padding:7px 9px;text-align:left;vertical-align:top}th{background:#f3f4f6}img{max-width:100%;height:auto;border:1px solid #e5e7eb;border-radius:6px;background:white}h1,h2,h3{line-height:1.2}ul,ol{padding-left:26px}</style></head><body><main>
+<h1 id="tc-01">Цифрал TC-01</h1>
+<p>Прошивка для контроллера доступа Цифрал TC-01 на <code>ATmega8A</code>. Устройство работает с ключами iButton/1-Wire и совместимыми ключами, хранит базу во внешней EEPROM <code>24C64</code>, управляет электромагнитным или электромеханическим замком, имеет сервисное меню, кнопку открытия, светодиодную индикацию и зуммер.</p>
+<h2 id="поддерживаемые-ключи">Поддерживаемые ключи</h2>
+<p>Прошивка пытается прочитать ключ несколькими способами:</p>
+<table><thead><tr>
+<th>Тип</th>
+<th>Поддержка</th>
+<th>Примечание</th>
+</tr></thead><tbody>
+<tr>
+<td><code>DS1990A</code>, <code>RW1990</code>, аналоги</td>
+<td>да</td>
+<td>Dallas/1-Wire family <code>0x01</code></td>
+</tr>
+<tr>
+<td><code>DS1992L+F5</code></td>
+<td>да</td>
+<td>Dallas/1-Wire family <code>0x08</code></td>
+</tr>
+<tr>
+<td><code>DS1995L+F5</code></td>
+<td>да</td>
+<td>Dallas/1-Wire family <code>0x0A</code></td>
+</tr>
+<tr>
+<td>Metakom/MK-совместимые</td>
+<td>да</td>
+<td>читаются отдельным декодером <code>mk_rx()</code></td>
+</tr>
+<tr>
+<td>Cyfral-совместимые</td>
+<td>да</td>
+<td>читаются отдельным декодером <code>cyfral_rx()</code></td>
+</tr>
+</tbody></table>
+<p>Важное ограничение: база ключей пока использует старый 4-байтный внутренний формат. Для Dallas/1-Wire ключей читается полный 64-битный ROM, проверяется CRC, затем идентификатор сворачивается в 4 байта для совместимости с уже существующей базой EEPROM. Это сохраняет совместимость с текущими записанными ключами, но не использует весь 48-битный серийный номер DS1992/DS1995.</p>
+<h2 id="контроллер">Контроллер</h2>
+<p>Целевой микроконтроллер: <code>ATmega8A-PU</code>, корпус <code>PDIP-28</code>.</p>
+<p>Параметры:</p>
+<ul>
+<li>Flash: <code>8 KB</code>;</li>
+<li>SRAM: <code>1 KB</code>;</li>
+<li>внутренняя EEPROM: <code>512 B</code>;</li>
+<li>питание логики: <code>5 V</code>;</li>
+<li>тактирование: внутренний RC около <code>4 MHz</code>;</li>
+<li>сборка: <code>avr-gcc</code>, цель <code>atmega8</code>, <code>F_CPU=4000000UL</code>.</li>
+</ul>
+<p>Fuse-биты, использованные при прошивке:</p>
+<pre><code>lfuse = 0xE3
+hfuse = 0x99
+lock  = 0xFF</code></pre>
+<p><code>lock=0xFF</code> означает, что Flash не заблокирована. Финальную блокировку можно ставить отдельно только после полной проверки устройства.</p>
+<h2 id="распиновка-atmega8a-pu">Распиновка ATmega8A-PU</h2>
+<p>Корпус <code>PDIP-28</code>, вид сверху, ключ/выемка сверху.</p>
+<p><img src="atmega8a_pin.png" alt="Распиновка ATmega8A-PU" /></p>
+<table><thead><tr>
+<th>Нога</th>
+<th>Порт</th>
+<th>Назначение</th>
+</tr></thead><tbody>
+<tr>
+<td>1</td>
+<td><code>PC6/RESET</code></td>
+<td>Reset, ISP</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>PD0/RXD</code></td>
+<td>не используется</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>PD1/TXD</code></td>
+<td>софт-UART отладка</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>PD2/INT0</code></td>
+<td>не используется</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>PD3/INT1</code></td>
+<td>не используется</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>PD4/T0</code></td>
+<td>не используется</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>VCC</code></td>
+<td>питание <code>+5V</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>GND</code></td>
+<td>земля</td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>PB6/XTAL1</code></td>
+<td>не используется, внутренний RC</td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>PB7/XTAL2</code></td>
+<td>не используется, внутренний RC</td>
+</tr>
+<tr>
+<td>11</td>
+<td><code>PD5/T1</code></td>
+<td><code>E_TD</code></td>
+</tr>
+<tr>
+<td>12</td>
+<td><code>PD6/AIN0</code></td>
+<td><code>TC</code></td>
+</tr>
+<tr>
+<td>13</td>
+<td><code>PD7/AIN1</code></td>
+<td><code>E_TC</code></td>
+</tr>
+<tr>
+<td>14</td>
+<td><code>PB0/ICP1</code></td>
+<td>не используется</td>
+</tr>
+<tr>
+<td>15</td>
+<td><code>PB1/OC1A</code></td>
+<td><code>TD</code>, линия ключа Dallas/1-Wire</td>
+</tr>
+<tr>
+<td>16</td>
+<td><code>PB2/SS/OC1B</code></td>
+<td>не используется</td>
+</tr>
+<tr>
+<td>17</td>
+<td><code>PB3/MOSI/OC2</code></td>
+<td><code>RED</code>, красный LED, ISP MOSI</td>
+</tr>
+<tr>
+<td>18</td>
+<td><code>PB4/MISO</code></td>
+<td><code>XP3</code>, сервисная перемычка, ISP MISO</td>
+</tr>
+<tr>
+<td>19</td>
+<td><code>PB5/SCK</code></td>
+<td><code>GREEN</code>, зелёный LED, ISP SCK</td>
+</tr>
+<tr>
+<td>20</td>
+<td><code>AVCC</code></td>
+<td>питание аналоговой части, подключить к <code>+5V</code></td>
+</tr>
+<tr>
+<td>21</td>
+<td><code>AREF</code></td>
+<td>не используется</td>
+</tr>
+<tr>
+<td>22</td>
+<td><code>GND</code></td>
+<td>земля</td>
+</tr>
+<tr>
+<td>23</td>
+<td><code>PC0/ADC0</code></td>
+<td><code>WP</code>, защита записи EEPROM 24C64</td>
+</tr>
+<tr>
+<td>24</td>
+<td><code>PC1/ADC1</code></td>
+<td><code>LOCK</code>, управление замком</td>
+</tr>
+<tr>
+<td>25</td>
+<td><code>PC2/ADC2</code></td>
+<td><code>BEEP</code>, зуммер</td>
+</tr>
+<tr>
+<td>26</td>
+<td><code>PC3/ADC3</code></td>
+<td><code>SW</code>, кнопка открытия двери</td>
+</tr>
+<tr>
+<td>27</td>
+<td><code>PC4/ADC4/SDA</code></td>
+<td><code>SDA</code>, EEPROM 24C64</td>
+</tr>
+<tr>
+<td>28</td>
+<td><code>PC5/ADC5/SCL</code></td>
+<td><code>SCL</code>, EEPROM 24C64</td>
+</tr>
+</tbody></table>
+<p>Линии ISP <code>MOSI/MISO/SCK</code> одновременно используются платой для LED и перемычки <code>XP3</code>. Если ArduinoISP не прошивает контроллер, временно отключить внешние нагрузки с <code>PB3/PB4/PB5</code> или проверить, что они не мешают уровням SPI.</p>
+<h2 id="подключение">Подключение</h2>
+<p>Фото платы:</p>
+<p><img src="layout.jpg" alt="Плата TC-01" /></p>
+<p><img src="connect.png" alt="Схема подключения TC-01" /></p>
+<p>Основные узлы:</p>
+<ul>
+<li><code>TD</code> (<code>PB1</code>) - линия чтения ключей Dallas/1-Wire;</li>
+<li><code>SDA/SCL</code> (<code>PC4/PC5</code>) - программный I2C для <code>24C64</code>;</li>
+<li><code>WP</code> (<code>PC0</code>) - управление защитой записи <code>24C64</code>;</li>
+<li><code>LOCK</code> (<code>PC1</code>) - выход управления силовым ключом замка;</li>
+<li><code>BEEP</code> (<code>PC2</code>) - зуммер;</li>
+<li><code>SW</code> (<code>PC3</code>) - кнопка открытия замка;</li>
+<li><code>XP3</code> (<code>PB4</code>) - сервисная перемычка;</li>
+<li><code>RED/GREEN</code> (<code>PB3/PB5</code>) - индикация.</li>
+</ul>
+<p>Клеммы платы:</p>
+<table><thead><tr>
+<th>Контакты</th>
+<th>Назначение</th>
+</tr></thead><tbody>
+<tr>
+<td><code>1</code>, <code>2</code></td>
+<td>питание устройства <code>12 V AC</code></td>
+</tr>
+<tr>
+<td><code>3</code>, <code>4</code></td>
+<td>считыватель ключей, контакт <code>4</code> - общий минус</td>
+</tr>
+<tr>
+<td><code>4</code>, <code>5</code></td>
+<td>кнопка открытия замка <code>SW</code>, контакт <code>4</code> - общий минус</td>
+</tr>
+<tr>
+<td><code>M+</code> и минус</td>
+<td>выход на замок; на <code>M+</code> к замку должно быть около <code>19 V DC</code></td>
+</tr>
+</tbody></table>
+<p>Контакт <code>4</code> используется как общий минус для считывателя и кнопки открытия.</p>
+<h2 id="управление-замком">Управление замком</h2>
+<p>Выход <code>LOCK</code> управляет силовым транзистором активным низким уровнем.</p>
+<h3 id="режим-1-электромагнитный-замок">Режим 1: электромагнитный замок</h3>
+<p>Используется для магнита, которому нужно постоянное питание в закрытом состоянии.</p>
+<ul>
+<li>Ожидание: <code>PC1/LOCK = 0</code>, транзистор открыт, магнит удерживает.</li>
+<li>Открытие: <code>PC1/LOCK = 1</code>, транзистор закрыт, питание с магнита снимается.</li>
+<li>После таймера открытия: снова <code>PC1/LOCK = 0</code>.</li>
+</ul>
+<h3 id="режим-2-электромеханический-замок">Режим 2: электромеханический замок</h3>
+<p>Используется для замка, которому питание подаётся только на время открытия.</p>
+<ul>
+<li>Ожидание: <code>PC1/LOCK = 1</code>, транзистор закрыт, питания на замке нет.</li>
+<li>Открытие: <code>PC1/LOCK = 0</code>, транзистор открыт, питание подаётся.</li>
+<li>После таймера открытия: снова <code>PC1/LOCK = 1</code>.</li>
+</ul>
+<p>Режим хранится во внутренней EEPROM ATmega8A по адресу <code>0x09</code>:</p>
+<ul>
+<li><code>0xFF</code> - режим 1, электромагнитный;</li>
+<li><code>0x00</code> - режим 2, электромеханический.</li>
+</ul>
+<p>Если значение повреждено, прошивка восстанавливает режим 1.</p>
+<h2 id="время-открытия">Время открытия</h2>
+<p>Время открытия хранится во внешней EEPROM <code>24C64</code> в служебном блоке. Единица измерения - <code>100 ms</code>.</p>
+<ul>
+<li>значение по умолчанию: <code>0x0032</code>, то есть <code>50 * 100 ms = 5 секунд</code>;</li>
+<li>максимум: <code>0x0C00</code>, то есть около <code>307.2 секунд</code>;</li>
+<li>если значение повреждено или слишком большое, используется значение по умолчанию.</li>
+</ul>
+<p>Во время открытия зуммер включён постоянно, зелёный LED горит, выход <code>LOCK</code> переведён в состояние открытия.</p>
+<h2 id="память-eeprom-24c64">Память EEPROM 24C64</h2>
+<p>Внешняя EEPROM <code>24C64</code> используется для базы ключей и параметров.</p>
+<table><thead><tr>
+<th>Адрес</th>
+<th>Размер</th>
+<th>Назначение</th>
+</tr></thead><tbody>
+<tr>
+<td><code>0x0000..0x0003</code></td>
+<td>4 байта</td>
+<td>служебный блок</td>
+</tr>
+<tr>
+<td><code>0x0000..0x0001</code></td>
+<td>2 байта</td>
+<td>количество пользовательских ключей</td>
+</tr>
+<tr>
+<td><code>0x0002..0x0003</code></td>
+<td>2 байта</td>
+<td>время открытия в тиках по 100 ms</td>
+</tr>
+<tr>
+<td><code>0x0004..0x0007</code></td>
+<td>4 байта</td>
+<td>мастер-ключ</td>
+</tr>
+<tr>
+<td><code>0x0008..0x1FFF</code></td>
+<td>по 4 байта</td>
+<td>пользовательские ключи</td>
+</tr>
+</tbody></table>
+<p>Пустая ячейка ключа: <code>0xFFFFFFFF</code>. Такой ключ запрещён к записи.</p>
+<p>При старте выполняется самодиагностика:</p>
+<ul>
+<li>проверяется доступность EEPROM;</li>
+<li>проверяется мастер-ключ;</li>
+<li>проверяется CRC ключей;</li>
+<li>проверяется отсутствие непустых ключей после первой пустой ячейки;</li>
+<li>проверяется счётчик ключей в заголовке.</li>
+</ul>
+<p>После трёх подряд ошибок EEPROM включается аварийное поведение: корректно прочитанный ключ может открыть дверь по общему таймеру.</p>
+<h2 id="обычный-режим">Обычный режим</h2>
+<p>При запуске без перемычки <code>XP3</code> устройство входит в обычный режим.</p>
+<p>Поведение:</p>
+<ul>
+<li>в ожидании периодически мигает красный LED;</li>
+<li>кнопка <code>SW</code> открывает дверь сразу;</li>
+<li>мастер-ключ в обычном режиме работает как обычный разрешённый ключ;</li>
+<li>пользовательский ключ из базы открывает дверь;</li>
+<li>неизвестный ключ не открывает дверь и получает сигнал отказа;</li>
+<li>если EEPROM повреждена, после нескольких ошибок включается аварийная логика.</li>
+</ul>
+<h2 id="сервисный-режим">Сервисный режим</h2>
+<p>Сервисный режим включается перемычкой <code>XP3</code>.</p>
+<p>Вход:</p>
+<ul>
+<li>если <code>XP3</code> установлена при включении питания, устройство сразу входит в сервисный режим;</li>
+<li>если <code>XP3</code> установить во время работы, устройство переходит в сервисный режим из обычного режима;</li>
+<li>при входе звучат <code>3</code> длинных сигнала.</li>
+</ul>
+<p>В сервисном режиме управление выполняется кнопкой <code>SW</code> и мастер-ключом.</p>
+<h2 id="сервисное-меню">Сервисное меню</h2>
+<p>Вход в меню:</p>
+<ul>
+<li>установить перемычку <code>XP3</code>;</li>
+<li>приложить мастер-ключ;</li>
+<li>после подтверждения нажать кнопку <code>SW</code>.</li>
+</ul>
+<p>Навигация:</p>
+<ul>
+<li>короткое нажатие <code>SW</code> - следующий пункт меню;</li>
+<li>длинное нажатие <code>SW</code> - выбрать текущий пункт;</li>
+<li>пункты идут по кругу;</li>
+<li>номер пункта озвучивается короткими сигналами.</li>
+</ul>
+<p>Пункты меню:</p>
+<table><thead><tr>
+<th>Пункт</th>
+<th>Сигнал</th>
+<th>Назначение</th>
+</tr></thead><tbody>
+<tr>
+<td>1</td>
+<td><code>1</code> короткий</td>
+<td>добавление пользовательских ключей</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>2</code> коротких</td>
+<td>настройка времени открытия</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>3</code> коротких</td>
+<td>удаление пользовательских ключей</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>4</code> коротких</td>
+<td>настройка режима замка</td>
+</tr>
+</tbody></table>
+<h3 id="пункт-1-добавление-ключей">Пункт 1: добавление ключей</h3>
+<p>После входа в пункт:</p>
+<ul>
+<li>приложить новый ключ;</li>
+<li>если ключ добавлен, звучит <code>1</code> длинный сигнал;</li>
+<li>если ключ уже есть, звучат <code>2</code> коротких;</li>
+<li>мастер-ключ не добавляется как пользовательский;</li>
+<li>короткое нажатие <code>SW</code> выходит из пункта обратно в меню.</li>
+</ul>
+<h3 id="пункт-2-время-открытия">Пункт 2: время открытия</h3>
+<p>После входа в пункт:</p>
+<ul>
+<li>нажать <code>SW</code>, чтобы начать отсчёт;</li>
+<li>каждую секунду звучит <code>1</code> короткий сигнал;</li>
+<li>нажать <code>SW</code> ещё раз, чтобы сохранить время;</li>
+<li>сохранение подтверждается <code>2</code> короткими сигналами.</li>
+</ul>
+<p>Внутри прошивки сохранённое значение переводится в тики по 100 ms.</p>
+<h3 id="пункт-3-удаление-ключей">Пункт 3: удаление ключей</h3>
+<p>После входа в пункт:</p>
+<ul>
+<li>приложить пользовательский ключ;</li>
+<li>если ключ удалён, звучит <code>1</code> короткий сигнал;</li>
+<li>если ключа нет в базе, звучат <code>2</code> коротких;</li>
+<li>мастер-ключ не удаляется;</li>
+<li>короткое нажатие <code>SW</code> выходит из пункта обратно в меню.</li>
+</ul>
+<h3 id="пункт-4-режим-замка">Пункт 4: режим замка</h3>
+<p>После выбора пункта длинным нажатием:</p>
+<ul>
+<li>устройство входит в настройку режима замка;</li>
+<li>сразу озвучивает текущий режим: <code>1</code> короткий или <code>2</code> коротких;</li>
+<li>короткое нажатие переключает <code>1 -&gt; 2 -&gt; 1</code> по кругу;</li>
+<li>длинное нажатие сохраняет выбранный режим;</li>
+<li>после сохранения звучит <code>1</code> длинный сигнал выхода и затем <code>1</code> или <code>2</code> коротких, какой режим сохранён.</li>
+</ul>
+<p>Для электромагнитного замка на текущей плате нужен режим <code>1</code>.</p>
+<h2 id="сброс-и-новый-мастер-ключ">Сброс и новый мастер-ключ</h2>
+<p>В сервисном режиме можно полностью очистить базу и записать новый мастер-ключ:</p>
+<ol>
+<li>Установить перемычку <code>XP3</code>.</li>
+<li>Удерживать кнопку <code>SW</code> около <code>10 секунд</code>.</li>
+<li>После сигнала приложить новый мастер-ключ.</li>
+<li>Прошивка очистит пользовательские ключи, восстановит параметры по умолчанию и запишет мастер-ключ.</li>
+</ol>
+<p>После сброса:</p>
+<ul>
+<li>мастер-ключ записан заново;</li>
+<li>список пользовательских ключей пуст;</li>
+<li>время открытия возвращается к <code>5 секундам</code>;</li>
+<li>режим замка возвращается к режиму <code>1</code>.</li>
+</ul>
+<h2 id="сигналы">Сигналы</h2>
+<table><thead><tr>
+<th>Событие</th>
+<th>Сигнал</th>
+</tr></thead><tbody>
+<tr>
+<td>Вход в сервисный режим</td>
+<td><code>3</code> длинных</td>
+</tr>
+<tr>
+<td>Пункт меню</td>
+<td><code>1..4</code> коротких</td>
+</tr>
+<tr>
+<td>Выбор пункта меню</td>
+<td><code>1</code> длинный</td>
+</tr>
+<tr>
+<td>Ключ добавлен</td>
+<td><code>1</code> длинный</td>
+</tr>
+<tr>
+<td>Ключ уже есть</td>
+<td><code>2</code> коротких</td>
+</tr>
+<tr>
+<td>Ключ удалён</td>
+<td><code>1</code> короткий</td>
+</tr>
+<tr>
+<td>Ключ не найден при удалении</td>
+<td><code>2</code> коротких</td>
+</tr>
+<tr>
+<td>Отказ неизвестному ключу</td>
+<td><code>2</code> коротких + <code>2</code> длинных</td>
+</tr>
+<tr>
+<td>Ошибка операции</td>
+<td>частая трель</td>
+</tr>
+<tr>
+<td>Сохранение времени открытия</td>
+<td><code>2</code> коротких</td>
+</tr>
+<tr>
+<td>Сохранение режима замка</td>
+<td><code>1</code> длинный + номер режима</td>
+</tr>
+</tbody></table>
+<h2 id="сборка">Сборка</h2>
+<p>Зависимости:</p>
+<ul>
+<li><code>avr-gcc</code>;</li>
+<li><code>avr-libc</code>;</li>
+<li><code>avr-objcopy</code>;</li>
+<li><code>avr-size</code>;</li>
+<li><code>make</code>;</li>
+<li><code>avrdude</code> для прошивки.</li>
+</ul>
+<p>Сборка:</p>
+<pre><code>make</code></pre>
+<p>Результат:</p>
+<ul>
+<li><code>TC-01.elf</code>;</li>
+<li><code>TC-01.hex</code>.</li>
+</ul>
+<p>Очистка:</p>
+<pre><code>make clean</code></pre>
+<h2 id="прошивка-через-arduinoisp">Прошивка через ArduinoISP</h2>
+<p>Подготовка Arduino Uno:</p>
+<ol>
+<li>Подключить Arduino Uno к USB.</li>
+<li>Открыть Arduino IDE.</li>
+<li>Выбрать плату <code>Arduino Uno</code>.</li>
+<li>Открыть пример <code>File -&gt; Examples -&gt; 11.ArduinoISP -&gt; ArduinoISP</code>.</li>
+<li>Загрузить скетч в Arduino Uno.</li>
+<li>Поставить конденсатор <code>10 uF</code> между <code>RESET</code> и <code>GND</code> Arduino Uno, чтобы Uno не перезагружалась при запуске <code>avrdude</code>.</li>
+</ol>
+<p>Подключение ISP:</p>
+<table><thead><tr>
+<th>Arduino Uno</th>
+<th>ATmega8A</th>
+</tr></thead><tbody>
+<tr>
+<td><code>D10</code></td>
+<td><code>RESET</code>, pin 1</td>
+</tr>
+<tr>
+<td><code>D11</code></td>
+<td><code>MOSI/PB3</code>, pin 17</td>
+</tr>
+<tr>
+<td><code>D12</code></td>
+<td><code>MISO/PB4</code>, pin 18</td>
+</tr>
+<tr>
+<td><code>D13</code></td>
+<td><code>SCK/PB5</code>, pin 19</td>
+</tr>
+<tr>
+<td><code>5V</code></td>
+<td><code>VCC</code>, pin 7</td>
+</tr>
+<tr>
+<td><code>5V</code></td>
+<td><code>AVCC</code>, pin 20</td>
+</tr>
+<tr>
+<td><code>GND</code></td>
+<td><code>GND</code>, pins 8 и 22</td>
+</tr>
+</tbody></table>
+<p>Проверка связи, fuse и lock:</p>
+<pre><code>avrdude -c stk500v1 -P COM3 -b 19200 -p m8 -U lfuse:r:-:h -U hfuse:r:-:h -U lock:r:-:h</code></pre>
+<p>Ожидаемо:</p>
+<pre><code>lfuse = 0xe3
+hfuse = 0x99
+lock  = 0xff</code></pre>
+<p>Обычная запись:</p>
+<pre><code>avrdude -c stk500v1 -P COM3 -b 19200 -p m8 -U flash:w:TC-01.hex:i -U lfuse:w:0xE3:m -U hfuse:w:0x99:m</code></pre>
+<p>На этой схеме ArduinoISP может зависать при длинном чтении Flash во время verify. Если verify зависает, использовать запись короткими блоками из каталога <code>chunks/</code> с отключенной проверкой чтением:</p>
+<ul>
+<li>первый блок пишется с chip erase;</li>
+<li>остальные блоки пишутся с <code>-D</code>;</li>
+<li>все блоки пишутся с <code>-V</code>.</li>
+</ul>
+<p>После записи блоками проверять только сигнатуру, fuse и lock, не делать длинный dump/verify Flash.</p>
+<p>Если <code>avrdude</code> установлен через пакет ZakKemble AVR-GCC и не находит <code>avrdude.conf</code>, запускать с явным <code>-C</code>, например:</p>
+<pre><code>avrdude -C &quot;$env:LOCALAPPDATA\Microsoft\WinGet\Packages\ZakKemble.avr-gcc_Microsoft.Winget.Source_8wekyb3d8bbwe\avr-gcc-14.1.0-x64-windows\bin\avrdude.conf&quot; -c stk500v1 -P COM3 -b 19200 -p m8 -U lfuse:r:-:h -U hfuse:r:-:h -U lock:r:-:h</code></pre>
+<h2 id="диагностика-замка">Диагностика замка</h2>
+<p>Если электромагнитный замок держит слабо:</p>
+<ol>
+<li>Убедиться, что в пункте 4 сохранён режим <code>1</code>.</li>
+<li>Измерить напряжение прямо на клеммах магнита при подключённом магните.</li>
+<li>Измерить <code>PC1/LOCK</code>, pin 24 ATmega8A:</li>
+</ol>
+<ul>
+<li>в режиме ожидания режима <code>1</code> должно быть около <code>0 V</code>;</li>
+<li>при открытии должно быть около <code>5 V</code>.</li>
+</ul>
+<ol>
+<li>Если <code>PC1</code> переключается правильно, а магнит слабый, искать проблему в питании, силовом транзисторе, проводке, земле или самом магните.</li>
+</ol>
+<p>Прошивка не использует ШИМ для замка. Выход <code>LOCK</code> держится постоянно в одном состоянии и переключается только на время открытия.</p>
+</main></body></html>
