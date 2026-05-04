@@ -1,5 +1,13 @@
 # Цифрал TC-01
 
+[![Latest release](https://img.shields.io/github/v/release/gooog1111/cyfral-tc-01?label=latest%20release)](https://github.com/gooog1111/cyfral-tc-01/releases/latest)
+[![GitHub stars](https://img.shields.io/github/stars/gooog1111/cyfral-tc-01?style=social)](https://github.com/gooog1111/cyfral-tc-01/stargazers)
+![Repository visits](https://visitor-badge.laobi.icu/badge?page_id=gooog1111.cyfral-tc-01)
+
+Ошибки, предложения по добавлению функционала и другие задачи описывайте в [Issues](https://github.com/gooog1111/cyfral-tc-01/issues).
+
+Проект не является оригинальной разработкой. Исходный код взят из публикации [Cyfral TC-01](https://allaboutdomofon.blogspot.com/2021/05/cyfral-tc-01.html), этот репозиторий содержит доработанную и документированную версию.
+
 Прошивка для контроллера доступа Цифрал TC-01 на `ATmega8A`. Устройство работает с ключами iButton/1-Wire и совместимыми ключами, хранит базу во внешней EEPROM `24C64`, управляет электромагнитным или электромеханическим замком, имеет сервисное меню, кнопку открытия, светодиодную индикацию и зуммер.
 
 ## Текущая версия
@@ -401,4 +409,3 @@ avrdude -C "$env:LOCALAPPDATA\Microsoft\WinGet\Packages\ZakKemble.avr-gcc_Micros
 4. Если `PC1` переключается правильно, а магнит слабый, искать проблему в питании, силовом транзисторе, проводке, земле или самом магните.
 
 Прошивка не использует ШИМ для замка. Выход `LOCK` держится постоянно в одном состоянии и переключается только на время открытия.
-
