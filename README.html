@@ -11,6 +11,7 @@
 <li>добавлена поддержка Dallas/Maxim <code class="notranslate">DS1992L+F5</code> и <code class="notranslate">DS1995L+F5</code>;</li>
 <li>сохранена поддержка <code class="notranslate">DS1990A/RW1990</code> и совместимых ключей;</li>
 <li>режим замка настраивается через 4-й пункт сервисного меню;</li>
+<li>автосбор ключей настраивается через 5-й пункт сервисного меню и по умолчанию выключен;</li>
 <li>для этой платы выход <code class="notranslate">LOCK</code> работает активным низким уровнем: удержание магнита соответствует <code class="notranslate">PC1 = 0</code>;</li>
 <li>короткие звуковые сигналы сбрасывают watchdog, поэтому 4-й пункт меню больше не вызывает перезагрузку;</li>
 <li>прошивка собирается под <code class="notranslate">F_CPU=4000000UL</code>, fuse <code class="notranslate">LOW=0xE3</code>.</li>
@@ -291,6 +292,12 @@ lock  = 0xFF
 <li><code class="notranslate">0x00</code> - режим 2, электромеханический.</li>
 </ul>
 <p dir="auto">Если значение повреждено, прошивка восстанавливает режим 1.</p>
+<p dir="auto">Режим автосбора хранится по адресу <code class="notranslate">0x0A</code>:</p>
+<ul dir="auto">
+<li><code class="notranslate">0xFF</code> - автосбор выключен;</li>
+<li><code class="notranslate">0x00</code> - автосбор включён.</li>
+</ul>
+<p dir="auto">При повреждённом значении и после полного сброса автосбор выключается.</p>
 <h2 dir="auto">Время открытия</h2>
 <p dir="auto">Время открытия хранится во внешней EEPROM <code class="notranslate">24C64</code> в служебном блоке. Единица измерения - <code class="notranslate">100 ms</code>.</p>
 <ul dir="auto">
@@ -356,6 +363,7 @@ lock  = 0xFF
 <li>мастер-ключ в обычном режиме работает как обычный разрешённый ключ;</li>
 <li>пользовательский ключ из базы открывает дверь;</li>
 <li>неизвестный ключ не открывает дверь и получает сигнал отказа;</li>
+<li>при включённом автосборе любой корректный ключ открывает дверь, а неизвестный сохраняется в базе;</li>
 <li>если EEPROM повреждена, после нескольких ошибок включается аварийная логика.</li>
 </ul>
 <h2 dir="auto">Сервисный режим</h2>
@@ -411,6 +419,11 @@ lock  = 0xFF
 <td><code class="notranslate">4</code> коротких</td>
 <td>настройка режима замка</td>
 </tr>
+<tr>
+<td align="right">5</td>
+<td><code class="notranslate">5</code> коротких</td>
+<td>настройка автосбора ключей</td>
+</tr>
 </tbody>
 </table></markdown-accessiblity-table>
 <h3 dir="auto">Пункт 1: добавление ключей</h3>
@@ -450,6 +463,17 @@ lock  = 0xFF
 <li>после сохранения звучит <code class="notranslate">1</code> длинный сигнал выхода и затем <code class="notranslate">1</code> или <code class="notranslate">2</code> коротких, какой режим сохранён.</li>
 </ul>
 <p dir="auto">Для электромагнитного замка на текущей плате нужен режим <code class="notranslate">1</code>.</p>
+<h3 dir="auto">Пункт 5: автосбор ключей</h3>
+<ul dir="auto">
+<li>устройство сразу озвучивает текущий режим: <code class="notranslate">1</code> короткий - выключен, <code class="notranslate">2</code> коротких - включён;</li>
+<li>короткое нажатие переключает режимы <code class="notranslate">1 -&gt; 2 -&gt; 1</code>;</li>
+<li>длинное нажатие сохраняет выбранный режим;</li>
+<li>после сохранения можно снять перемычку <code class="notranslate">XP3</code>, и автосбор будет работать в обычном режиме;</li>
+<li>при включённом автосборе любой корректно прочитанный ключ открывает дверь;</li>
+<li>неизвестный ключ перед открытием добавляется в базу, уже записанный ключ повторно не сохраняется;</li>
+<li>мастер-ключ открывает дверь, но не добавляется в список пользовательских ключей;</li>
+<li>если ключ не удалось записать из-за ошибки или заполненной памяти, дверь всё равно открывается.</li>
+</ul>
 <h2 dir="auto">Сброс и новый мастер-ключ</h2>
 <p dir="auto">В сервисном режиме можно полностью очистить базу и записать новый мастер-ключ:</p>
 <ol dir="auto">
@@ -464,6 +488,7 @@ lock  = 0xFF
 <li>список пользовательских ключей пуст;</li>
 <li>время открытия возвращается к <code class="notranslate">5 секундам</code>;</li>
 <li>режим замка возвращается к режиму <code class="notranslate">1</code>.</li>
+<li>автосбор ключей выключается.</li>
 </ul>
 <h2 dir="auto">Сигналы</h2>
 <markdown-accessiblity-table><table role="table">
@@ -480,7 +505,7 @@ lock  = 0xFF
 </tr>
 <tr>
 <td>Пункт меню</td>
-<td><code class="notranslate">1..4</code> коротких</td>
+<td><code class="notranslate">1..5</code> коротких</td>
 </tr>
 <tr>
 <td>Выбор пункта меню</td>
@@ -561,10 +586,10 @@ make</pre></div>
 <li><code class="notranslate">TC-01.hex</code> - Intel HEX для записи во Flash ATmega8A.</li>
 </ul>
 <p dir="auto">Ожидаемый размер текущей версии:</p>
-<pre lang="text" class="notranslate"><code class="notranslate">text = 5316
+<pre lang="text" class="notranslate"><code class="notranslate">text = 5480
 data = 0
 bss  = 2
-dec  = 5318
+dec  = 5482
 </code></pre>
 <h2 dir="auto">Разбивка HEX на чанки</h2>
 <p dir="auto">Обычно прошивку можно писать одним файлом <code class="notranslate">TC-01.hex</code>. Чанки нужны только если программатор или схема зависает на длинной записи/проверке, чаще всего это встречается с ArduinoISP.</p>

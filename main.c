@@ -30,6 +30,9 @@
 #define LOCK_MODE_ADDR		0x09
 #define LOCK_MODE_MAGNETIC	0xFF
 #define LOCK_MODE_MECH		0x00
+#define AUTO_COLLECT_ADDR	0x0A
+#define AUTO_COLLECT_OFF	0xFF
+#define AUTO_COLLECT_ON		0x00
 #define DS1990_FAMILY		0x01
 #define DS1992_FAMILY		0x08
 #define DS1995_FAMILY		0x0A
@@ -43,7 +46,7 @@ typedef union union_chunk{
 typedef enum enum_modes{NORMAL,JUMPER} modes;
 typedef enum enum_key{NO_KEY,ERROR,MASTER_KEY,FOUND,NOT_FOUND} key;
 typedef enum enum_add{ADD_OK,ADD_DUP,ADD_FULL,ADD_BAD,ADD_ERROR} add_result;
-typedef enum enum_setup{SET_ADD,SET_TIME,SET_DEL,SET_LOCK} setup_mode;
+typedef enum enum_setup{SET_ADD,SET_TIME,SET_DEL,SET_LOCK,SET_AUTO_COLLECT} setup_mode;
 
 uint8_t storage_error = 0;
 uint8_t storage_error_count = 0;
@@ -105,6 +108,23 @@ void lock_mode_validate()
 void lock_mode_default()
 {
 	eeprom_write(LOCK_MODE_ADDR,LOCK_MODE_MAGNETIC);
+}
+
+uint8_t auto_collect_mode()
+{
+	return eeprom_read(AUTO_COLLECT_ADDR) == AUTO_COLLECT_ON ? AUTO_COLLECT_ON : AUTO_COLLECT_OFF;
+}
+
+void auto_collect_validate()
+{
+	uint8_t mode = eeprom_read(AUTO_COLLECT_ADDR);
+	if((mode == AUTO_COLLECT_OFF) || (mode == AUTO_COLLECT_ON)) return;
+	eeprom_write(AUTO_COLLECT_ADDR,AUTO_COLLECT_OFF);
+}
+
+void auto_collect_default()
+{
+	eeprom_write(AUTO_COLLECT_ADDR,AUTO_COLLECT_OFF);
 }
 
 void beep_on()
@@ -657,6 +677,7 @@ uint8_t storage_clear_all()
 	chunk buffer;
 	buffer.longs = 0xFFFFFFFF;
 	lock_mode_default();
+	auto_collect_default();
 	if(i2c_write_c64(MASTER_KEY_ADDR,buffer.bytes)) return 1;
 	if(users_clear()) return 1;
 	return storage_header_init();
@@ -711,6 +732,7 @@ uint8_t storage_diag()
 	uint16_t header_count = 0;
 	uint8_t blank = 0;
 	lock_mode_validate();
+	auto_collect_validate();
 	if(i2c_read_c64(EEPROM_INFO_ADDR,info.bytes)) return 1;
 	header_count = info.bytes[0]<<8 | info.bytes[1];
 	if(header_count > MAX_USER_KEYS) return 5;
@@ -921,6 +943,30 @@ void set_lock_mode()
 	}
 }
 
+void auto_collect_signal(uint8_t mode)
+{
+	beep(mode == AUTO_COLLECT_OFF ? 1 : 2);
+}
+
+void set_auto_collect_mode()
+{
+	uint8_t mode = auto_collect_mode();
+	auto_collect_signal(mode);
+	while(!(PINB & SYS)){
+		uint8_t action = sw_action();
+		if(action == 1){
+			mode = (mode == AUTO_COLLECT_OFF) ? AUTO_COLLECT_ON : AUTO_COLLECT_OFF;
+			auto_collect_signal(mode);
+		}else if(action == 2){
+			eeprom_write(AUTO_COLLECT_ADDR,mode);
+			beep_long(1);
+			auto_collect_signal(mode);
+			return;
+		}
+		wdt_reset();
+	}
+}
+
 void stream_add()
 {
 	chunk buffer;
@@ -980,7 +1026,7 @@ void setup_menu()
 	while(!(PINB & SYS)){
 		uint8_t action = sw_action();
 		if(action == 1){
-			setup = (setup == SET_LOCK) ? SET_ADD : setup + 1;
+			setup = (setup == SET_AUTO_COLLECT) ? SET_ADD : setup + 1;
 			setup_signal(setup);
 		}else if(action == 2){
 			beep_long(1);
@@ -989,6 +1035,7 @@ void setup_menu()
 				case SET_TIME: set_open_time(); break;
 				case SET_DEL: stream_delete(); break;
 				case SET_LOCK: set_lock_mode(); continue;
+				case SET_AUTO_COLLECT: set_auto_collect_mode(); continue;
 			}
 			setup_signal(setup);
 		}
@@ -1120,6 +1167,14 @@ int main(void)
 				if(!(PINB & SYS)){ mode = JUMPER; break; }
 				if(sw_pressed()){
 					open();
+					break;
+				}
+				if(auto_collect_mode() == AUTO_COLLECT_ON){
+					if(!key_read(&buffer) && !key_bad(&buffer)){
+						key_add(&buffer);
+						open();
+						wait_key_release();
+					}
 					break;
 				}
 				if(storage_error){
