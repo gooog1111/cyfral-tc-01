@@ -1169,16 +1169,16 @@ int main(void)
 					open();
 					break;
 				}
-				if(auto_collect_mode() == AUTO_COLLECT_ON){
+				if(storage_error){
 					if(!key_read(&buffer) && !key_bad(&buffer)){
-						key_add(&buffer);
 						open();
 						wait_key_release();
 					}
 					break;
 				}
-				if(storage_error){
+				if(auto_collect_mode() == AUTO_COLLECT_ON){
 					if(!key_read(&buffer) && !key_bad(&buffer)){
+						key_add(&buffer);
 						open();
 						wait_key_release();
 					}
