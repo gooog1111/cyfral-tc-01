@@ -1,8 +1,86 @@
-# Цифрал TC-01
+<div align="center">
 
-[![Latest release](https://img.shields.io/github/v/release/gooog1111/cyfral-tc-01?label=latest%20release)](https://github.com/gooog1111/cyfral-tc-01/releases/latest)
-[![GitHub stars](https://img.shields.io/github/stars/gooog1111/cyfral-tc-01?style=social&cacheSeconds=3600)](https://github.com/gooog1111/cyfral-tc-01/stargazers)
-![Repository visits](https://visitor-badge.laobi.icu/badge?page_id=gooog1111.cyfral-tc-01)
+<img src="resources/header.svg" alt="Cyfral TC-01" width="900"/>
+
+</div>
+
+
+
+
+
+<!-- STATS_START -->
+<!-- auto-updated locally · 2026-06-26 17:57 UTC -->
+
+[![Views local](https://img.shields.io/badge/Views_local-19-ff6900?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
+[![Views GitHub](https://img.shields.io/badge/Views_GitHub-19-ff6900?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
+[![Unique visitors](https://img.shields.io/badge/Unique-3-blue?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
+[![Clones](https://img.shields.io/badge/Clones-36-purple?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
+[![Stars](https://img.shields.io/badge/Stars-1-yellow?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01/stargazers)
+[![Forks](https://img.shields.io/badge/Forks-0-green?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01/network/members)
+[![Downloads latest release](https://img.shields.io/badge/Downloads_latest_release-1-brightgreen?style=for-the-badge)](https://github.com/gooog1111/cyfral-tc-01/releases/latest)
+[![Downloads total assets](https://img.shields.io/badge/Downloads_total_assets-4-brightgreen?style=for-the-badge)](https://github.com/gooog1111/cyfral-tc-01/releases)
+
+<!-- STATS_END -->
+
+
+
+
+
+
+
+
+
+<!-- GRAPH_START -->
+<p align="center">
+  <img src="./traffic-views.png" width="100%" alt="GitHub Traffic">
+</p>
+<!-- GRAPH_END -->
+
+
+
+
+
+
+
+
+
+
+<!-- ISSUES_START -->
+<!-- auto-updated locally · 2026-06-26 17:57 UTC -->
+
+## Issues
+
+<p>
+  <a href="https://github.com/gooog1111/cyfral-tc-01/issues">
+    <img alt="Open issues" src="https://img.shields.io/badge/Open_issues-0-blue?style=for-the-badge&logo=github">
+  </a>
+  <a href="https://github.com/gooog1111/cyfral-tc-01/issues/new/choose">
+    <img alt="Create issue" src="https://img.shields.io/badge/Create_issue-new-success?style=for-the-badge&logo=github">
+  </a>
+</p>
+
+<details open>
+<summary><b>Открытые issues</b></summary>
+
+
+<p align="center">
+  <b>Открытых issues нет.</b><br>
+  <sub>Служебный issue <code>views-counter</code> скрыт из списка.</sub>
+</p>
+
+</details>
+
+<p>
+  <a href="https://github.com/gooog1111/cyfral-tc-01/issues/new/choose">Создать issue</a> ·
+  <a href="https://github.com/gooog1111/cyfral-tc-01/issues">Все issues</a>
+</p>
+
+<!-- ISSUES_END -->
+
+
+
+
+## Цифрал TC-01
 
 Ошибки, предложения по добавлению функционала и другие задачи описывайте в [Issues](https://github.com/gooog1111/cyfral-tc-01/issues).
 
@@ -634,13 +712,13 @@ lock  = 0xFF
 
 ## Диагностика замка
 
-Если электромагнитный замок держит слабо:
+Если электромагнитный замок не держит
 
 1. Убедиться, что в пункте 4 сохранён режим `1`.
 2. Измерить напряжение прямо на клеммах магнита при подключённом магните.
 3. Измерить `PC1/LOCK`, pin 24 ATmega8A:
    - в режиме ожидания режима `1` должно быть около `0 V`;
    - при открытии должно быть около `5 V`.
-4. Если `PC1` переключается правильно, а магнит слабый, искать проблему в питании, силовом транзисторе, проводке, земле или самом магните.
+4. Если `PC1` переключается правильно, а магнит слабый, искать проблему в питании, силовом транзисторе, проводке, земле, самом магните или ответной части.
 
 Прошивка не использует ШИМ для замка. Выход `LOCK` держится постоянно в одном состоянии и переключается только на время открытия.
