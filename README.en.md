@@ -13,15 +13,15 @@
 
 
 <!-- STATS_START -->
-<!-- auto-updated by GitHub Actions · 2026-06-30 08:00 UTC -->
+<!-- auto-updated by GitHub Actions · 2026-06-30 09:00 UTC -->
 
-[![Views local](https://img.shields.io/badge/Views_local-43-ff6900?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
+[![Views local](https://img.shields.io/badge/Views_local-44-ff6900?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
 [![Views GitHub](https://img.shields.io/badge/Views_GitHub-19-ff6900?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
 [![Unique visitors](https://img.shields.io/badge/Unique-3-blue?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
 [![Clones](https://img.shields.io/badge/Clones-214-purple?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
 [![Stars](https://img.shields.io/badge/Stars-1-yellow?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01/stargazers)
 [![Forks](https://img.shields.io/badge/Forks-0-green?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01/network/members)
-[![Downloads latest release](https://img.shields.io/badge/Downloads_latest_release-1-brightgreen?style=for-the-badge)](https://github.com/gooog1111/cyfral-tc-01/releases/latest)
+[![Downloads latest release](https://img.shields.io/badge/Downloads_latest_release-0-brightgreen?style=for-the-badge)](https://github.com/gooog1111/cyfral-tc-01/releases/latest)
 [![Downloads total assets](https://img.shields.io/badge/Downloads_total_assets-4-brightgreen?style=for-the-badge)](https://github.com/gooog1111/cyfral-tc-01/releases)
 
 <!-- STATS_END -->
@@ -50,7 +50,7 @@
 
 
 <!-- ISSUES_START -->
-<!-- auto-updated by GitHub Actions · 2026-06-30 08:00 UTC -->
+<!-- auto-updated by GitHub Actions · 2026-06-30 09:00 UTC -->
 
 ## Issues
 
@@ -114,8 +114,8 @@ The firmware tries to read the key in several ways:
 | `DS1990A`, `RW1990`, analogues | yes | Dallas/1-Wire family `0x01` |
 | `DS1992L+F5` | yes | Dallas/1-Wire family `0x08` |
 | `DS1995L+F5` | yes | Dallas/1-Wire family `0x0A` |
-| Metakom/MK-compatible | yes | read by a separate decoder `mk_rx()` |
-| Cyfral-compatible | yes | read by a separate decoder `cyfral_rx()` |
+| Metakom/MK-compatible | partial | read by a separate decoder `mk_rx()` |
+| Cyfral-compatible | partial | read by a separate decoder `cyfral_rx()` |
 
 An important limitation: the key database currently uses the old 4-byte internal format. For Dallas/1-Wire keys, the full 64-bit ROM is read, the CRC is checked, then the identifier is collapsed into 4 bytes for compatibility with the existing EEPROM base. This maintains compatibility with currently recorded keys, but does not use the entire DS1992/DS1995 48-bit serial number.
 
@@ -165,7 +165,7 @@ lock  = 0xFF
 | 15 | `PB1/OC1A` | `TD`, Dallas/1-Wire key line |
 | 16 | `PB2/SS/OC1B` | not used |
 | 17 | `PB3/MOSI/OC2` | `RED`, red LED, ISP MOSI |
-| 18 | `PB4/MISO` | `XP3`, service jumper, ISP MISO |
+| 18 | `PB4/MISO` | `XP3`, hard reset enable, ISP MISO |
 | 19 | `PB5/SCK` | `GREEN`, green LED, ISP SCK |
 | 20 | `AVCC` | power supply of the analog part, connect to `+5V` |
 | 21 | `AREF` | not used |
@@ -177,7 +177,7 @@ lock  = 0xFF
 | 27 | `PC4/ADC4/SDA` | `SDA`, EEPROM 24C64 |
 | 28 | `PC5/ADC5/SCL` | `SCL`, EEPROM 24C64 |
 
-ISP lines `MOSI/MISO/SCK` are simultaneously used by the board for LED and jumper `XP3`. If the ArduinoISP is not flashing the controller, temporarily disable external loads with `PB3/PB4/PB5` or check that they are not interfering with the SPI levels.
+ISP lines `MOSI/MISO/SCK` are simultaneously used by the board for LED and pin `XP3`. If the ArduinoISP is not flashing the controller, temporarily disable external loads with `PB3/PB4/PB5` or check that they are not interfering with the SPI levels.
 
 ## Connection
 
@@ -195,15 +195,15 @@ Main nodes:
 - `LOCK` (`PC1`) - power key control output for the lock;
 - `BEEP` (`PC2`) - buzzer;
 - `SW` (`PC3`) - button to open the lock;
-- `XP3` (`PB4`) - service jumper;
+- `XP3` (`PB4`) - full reset enable jumper, not used to enter the service mode;
 - `RED/GREEN` (`PB3/PB5`) - indication.
 
 Board terminals:
 
 | Contacts | Destination |
 | --- | --- |
-| `1`, `2` | device power `12 V AC` |
-| `3`, `4` | key reader, contact `4` - general minus || `4`, `5` | lock opening button `SW`, contact `4` - common minus |
+| `1`, `2` | device power `12 V AC` || `3`, `4` | key reader, contact `4` - general minus |
+| `4`, `5` | lock opening button `SW`, contact `4` - common minus |
 | `M+` and minus | exit to the castle; on `M+` to the lock there should be about `19 V DC` |
 
 Contact `4` is used as a common negative for the reader and the open button.
@@ -270,19 +270,21 @@ At startup, a self-diagnosis is performed:
 
 - EEPROM availability is checked;
 - the master key is checked;
-- CRC keys are checked;
-- checks for the absence of non-empty keys after the first empty cell;
-- the key counter in the header is checked.After three consecutive EEPROM errors, emergency behavior is activated: a correctly read key can open the door according to a common timer.
+- CRC keys are checked;- checks for the absence of non-empty keys after the first empty cell;
+- the key counter in the header is checked.
+
+After three consecutive EEPROM errors, emergency behavior is activated: a correctly read key can open the door according to a common timer.
 
 ## Normal mode
 
-When started without the `XP3` jumper, the device enters normal mode.
+When started, the device enters normal mode. The `XP3` jumper to enter the service mode is no longer used.
 
 Behavior:
 
 - while waiting, the red LED flashes periodically;
 - the `SW` button opens the door immediately;
-- the master key in normal mode works like a regular authorized key;
+- briefly applying the master key in normal mode opens the door;
+- holding the master key longer than `5 секунд` activates the service mode;
 - a user key from the database opens the door;
 - an unknown key does not open the door and receives a refusal signal;
 - when auto-collection is turned on, any correct key opens the door, and the unknown one is saved in the database;
@@ -290,23 +292,22 @@ Behavior:
 
 ## Service mode
 
-The service mode is enabled by the jumper `XP3`.
+The service mode is activated by holding the master key for 5 seconds. (jumper `XP3` is not required)
 
 Login:
 
-- if `XP3` is set when power is turned on, the device immediately enters service mode;
-- if `XP3` is set during operation, the device enters service mode from normal mode;
+- attach the master key and hold it longer `5 секунд`;
 - upon entry, `3` long beeps sound.
 
 In service mode, control is performed with the `SW` button and the master key.
+To exit the service mode, hold the master key again longer than `5 секунд`; output is confirmed by `2` long beeps.
 
 ## Service menu
 
 Entering the menu:
 
-- install jumper `XP3`;
-- attach the master key;
-- after confirmation, press the `SW` button.
+- enter the service mode by holding the master key longer than `5 секунд`;
+- after logging in, the `1` item is immediately announced, the menu is ready to be navigated with the `SW` button.
 
 Navigation:
 
@@ -330,14 +331,13 @@ Menu items:
 After entering the location:
 
 - attach a new key;
+- if a readable but invalid RW1990/TM01/RW2004/Dallas-compatible key is attached, the firmware tries to write a random code into it, then re-read it and only then add it to the database;
 - if the key is added, a long signal sounds `1`;
 - if the key is already there, `2` short sounds;
 - the master key is not added as a user key;
 - short press `SW` exits the item back to the menu.
 
-## # Point 2: opening time
-
-After entering the location:
+## # Point 2: opening timeAfter entering the location:
 
 - press `SW` to start the countdown;
 - every second a short signal sounds `1`;
@@ -352,7 +352,8 @@ After entering the location:
 
 - attach a user key;
 - if the key is removed, a short signal sounds `1`;
-- if the key is not in the database, `2` short sounds;- the master key is not deleted;
+- if the key is not in the database, `2` short sounds;
+- the master key is not deleted;
 - short press `SW` exits the item back to the menu.
 
 ## # Point 4: Lock mode
@@ -363,7 +364,7 @@ After selecting an item with a long press:
 - immediately announces the current mode: `1` short or `2` short;
 - short press switches `1 -> 2 -> 1` in a circle;
 - long press saves the selected mode;
-- after saving, `1` long exit signal sounds and then `1` or `2` short signals, which mode is saved.
+- after saving, a `1` long exit signal sounds and then a `1` or `2` short signal sounds, which mode is saved.
 
 The electromagnetic lock on the current board requires the `1` mode.
 
@@ -374,16 +375,19 @@ The electromagnetic lock on the current board requires the `1` mode.
 - long press saves the selected mode;
 - when auto collection is enabled, any correctly read key opens the door;
 - an unknown key is added to the database before opening, an already recorded key is not saved again;
-- if the key could not be written down due to an error or full memory, the door still opens.
+- if a readable but invalid RW1990/TM01/RW2004/Dallas-compatible key is attached, the firmware tries to write a random code into it, then re-read it and only then add it to the database;
+- if the key is read, but not written due to an error, full memory or unsuccessful rewriting of the RW blank, an error trill sounds and the door does not open.
+
+Automatic rewriting is implemented for RW1990-like, TM01/TM01C and RW2004/TM2004 blanks. For Metakom/Cyfral-compatible keys, the firmware has a reading protocol, but no writing protocol.
 
 ## Reset and new master key
 
-In service mode, you can completely clear the database and write a new master key:
+The database can be completely cleared and a new master key can be written even if the old master key is lost. To protect against accidental startup, the reset requires the `XP3` jumper to be installed.
 
 1. Install jumper `XP3`.
-2. Hold the `SW` button near `10 секунд`.
+2. Hold the `SW` button near `10 секунд` without removing `XP3`.
 3. After the signal, attach a new master key.
-4. The firmware will clear user keys, restore default settings and write the master key.
+4. The firmware will clear user keys, restore default settings and write the master key.This procedure works from normal mode and does not require the old master key. In service mode, the reset is launched in the same way: `XP3` plus hold `SW`.
 
 After reset:
 
@@ -398,6 +402,7 @@ After reset:
 | Event | Signal |
 | --- | --- |
 | Entering service mode | `3` long |
+| Exiting service mode | `2` long |
 | Menu item | `1..5` short |
 | Selecting a menu item | `1` long |
 | Key added | `1` long |
@@ -434,7 +439,9 @@ After installation, open a new PowerShell and check the tools:
 avr-gcc --version
 make --version
 avrdude -?
-```If `make` or `avrdude` are not found, add the `bin` directory of the AVR-GCC installation to `PATH` or run the tools in the full path. For a package from `winget` the path is usually something like:
+```
+
+If `make` or `avrdude` are not found, add the `bin` directory of the AVR-GCC installation to `PATH` or run the tools in the full path. For a package from `winget` the path is usually something like:
 
 ```powershell
 $env:LOCALAPPDATA\Microsoft\WinGet\Packages\ZakKemble.avr-gcc_Microsoft.Winget.Source_8wekyb3d8bbwe\avr-gcc-14.1.0-x64-windows\bin
@@ -489,10 +496,11 @@ Build result:
 Expected size of current version:
 
 ```text
-text = 5480
-data = 0
-bss  = 2
-dec  = 5482
+text = 7294
+data = 2
+bss  = 3
+dec  = 7299
+hex  = 1c83
 ```
 
 ## Breaking HEX into chunks
@@ -529,9 +537,7 @@ srec_cat TC-01.hex -Intel -crop 0x1800 0x1c00 -o chunks/TC-01_1800_1bff.hex -Int
 srec_cat TC-01.hex -Intel -crop 0x1c00 0x2000 -o chunks/TC-01_1c00_1fff.hex -Intel
 ```
 
-Empty upper chunks are acceptable if the firmware takes up less than 8 KB. To write in blocks, the first block is written with the chip cleared, the rest - with `-D`, so as not to erase already written pages.
-
-## Firmware via ArduinoISP
+Empty upper chunks are acceptable if the firmware takes up less than 8 KB. To write in blocks, the first block is written with the chip cleared, the rest - with `-D`, so as not to erase already written pages.## Firmware via ArduinoISP
 
 Preparing Arduino Uno:
 
@@ -614,7 +620,9 @@ avrdude -c stk500v1 -P /dev/ttyACM0 -b 19200 -p m8 -D -V -U flash:w:chunks/TC-01
 avrdude -c stk500v1 -P /dev/ttyACM0 -b 19200 -p m8 -U lfuse:w:0xE3:m -U hfuse:w:0x99:m
 ```
 
-After recording in blocks, check only the signature, fuse and lock, do not do a long dump/verify Flash.If `avrdude` is installed via the ZakKemble AVR-GCC package and does not find `avrdude.conf`, run with an explicit `-C`, for example:
+After recording in blocks, check only the signature, fuse and lock, do not do a long dump/verify Flash.
+
+If `avrdude` is installed via the ZakKemble AVR-GCC package and does not find `avrdude.conf`, run with an explicit `-C`, for example:
 
 ```powershell
 avrdude -C "$env:LOCALAPPDATA\Microsoft\WinGet\Packages\ZakKemble.avr-gcc_Microsoft.Winget.Source_8wekyb3d8bbwe\avr-gcc-14.1.0-x64-windows\bin\avrdude.conf" -c stk500v1 -P COM3 -b 19200 -p m8 -U lfuse:r:-:h -U hfuse:r:-:h -U lock:r:-:h
@@ -653,9 +661,7 @@ On Linux the commands are the same. If a regular user does not have access to US
 
 ```bash
 sudo avrdude -c usbasp -p m8 -U flash:w:TC-01.hex:i -U lfuse:w:0xE3:m -U hfuse:w:0x99:m
-```
-
-If USBasp is old and `avrdude` writes a warning about `cannot set sck period`, this is not always an error. If the connection is unstable, place the `slow SCK` jumper on USBasp or add the `-B 10` key:
+```If USBasp is old and `avrdude` writes a warning about `cannot set sck period`, this is not always an error. If the connection is unstable, place the `slow SCK` jumper on USBasp or add the `-B 10` key:
 
 ```bash
 avrdude -c usbasp -B 10 -p m8 -U flash:w:TC-01.hex:i -U lfuse:w:0xE3:m -U hfuse:w:0x99:m
@@ -711,7 +717,8 @@ If the electromagnetic lock does not hold
 
 1. Make sure that in step 4 the `1` mode is saved.
 2. Measure the voltage directly at the magnet terminals with the magnet connected.
-3. Measure `PC1/LOCK`, pin 24 ATmega8A:- in standby mode `1` should be about `0 V`;
+3. Measure `PC1/LOCK`, pin 24 ATmega8A:
+   - in standby mode `1` should be about `0 V`;
    - when opening it should be about `5 V`.
 4. If the `PC1` switches correctly and the magnet is weak, look for a problem in the power supply, power transistor, wiring, ground, the magnet itself, or the mating part.
 
