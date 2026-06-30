@@ -36,6 +36,7 @@
 #define DS1990_FAMILY		0x01
 #define DS1992_FAMILY		0x08
 #define DS1995_FAMILY		0x0A
+#define MASTER_SERVICE_TIME	50
 
 typedef union union_chunk{
 	uint8_t bytes[4];
@@ -43,13 +44,17 @@ typedef union union_chunk{
 	uint32_t longs;
 } chunk;
 
-typedef enum enum_modes{NORMAL,JUMPER} modes;
+typedef enum enum_modes{NORMAL,SERVICE} modes;
 typedef enum enum_key{NO_KEY,ERROR,MASTER_KEY,FOUND,NOT_FOUND} key;
-typedef enum enum_add{ADD_OK,ADD_DUP,ADD_FULL,ADD_BAD,ADD_ERROR} add_result;
+typedef enum enum_add{ADD_OK,ADD_DUP,ADD_FULL,ADD_BAD,ADD_ERROR,ADD_NO_KEY} add_result;
 typedef enum enum_setup{SET_ADD,SET_TIME,SET_DEL,SET_LOCK,SET_AUTO_COLLECT} setup_mode;
 
 uint8_t storage_error = 0;
 uint8_t storage_error_count = 0;
+uint8_t service_active = 0;
+uint16_t random_state = 0xA5C3;
+
+uint8_t key_read_stable(chunk* data);
 
 void __attribute__ ((noinline)) delay_01()
 {
@@ -74,6 +79,19 @@ void __attribute__ ((noinline)) ds_70us()
 void __attribute__ ((noinline)) ds_5us()
 {
 	_delay_us(4);
+}
+
+void ds_60us()
+{
+	_delay_us(60);
+}
+
+void ds_10ms()
+{
+	for(uint8_t i=0;i<10;i++){
+		_delay_ms(1);
+		wdt_reset();
+	}
 }
 
 uint8_t eeprom_read(uint8_t address)
@@ -290,6 +308,7 @@ void init()
 	lock_on();
 	DDRD = E_TD;
 	PORTD = E_TD;
+	TCCR0 = (1<<CS01);
 }
 
 /*************************************************************************	
@@ -485,13 +504,9 @@ uint8_t mk_rx(chunk* data)
 /*************************************************************************	
   Читает ключи Dallas. 0 - ключ прочитан в data
 *************************************************************************/
-uint8_t ds_read(chunk* data)
+uint8_t ds_reset()
 {
-	uint8_t crc = 0;
 	uint8_t result = 0;
-	uint8_t bytes[8];
-	//PORTD |= E_TD;
-	//DDRD |= E_TD;
 	DDRB |= TD;
 	ds_450us();
 	ds_450us();
@@ -503,44 +518,224 @@ uint8_t ds_read(chunk* data)
 	if(PINB & TD) result = 1;
 	ds_450us();
 	if(!(PINB & TD)) result = 1;
-	if(result){
-		//DDRD &= ~E_TD;
-		//PORTD &= ~E_TD;
-		return 1;
+	return result;
+}
+
+void ds_write_bit(uint8_t bit)
+{
+	DDRB |= TD;
+	if(bit){
+		ds_5us();
+		DDRB &= ~TD;
+		ds_70us();
+	}else{
+		ds_70us();
+		DDRB &= ~TD;
+		ds_5us();
 	}
-	result = 0x33;
-	for (uint8_t i=0;i<8;i++){
-		DDRB |= TD;
-		if (result & 0x01){
-			ds_5us();
-			DDRB &= ~TD;
-			ds_5us();			
-			ds_70us();
-		}else{
-			ds_70us();
-			DDRB &= ~TD;
-			ds_5us();
-			ds_5us();
-		}
-		result >>= 1;
-	}
+}
+
+uint8_t ds_read_bit()
+{
+	uint8_t bit = 0;
+	DDRB |= TD;
+	ds_5us();
+	DDRB &= ~TD;
+	ds_5us();
+	ds_5us();
+	if(PINB & TD) bit = 1;
+	ds_70us();
+	return bit;
+}
+
+uint8_t ds_read_byte()
+{
+	uint8_t data = 0;
 	for(uint8_t i=0;i<8;i++){
-		for (uint8_t j=0;j<8;j++){
-			result >>= 1;
-			DDRB |= TD;
-			ds_5us();
-			DDRB &= ~TD;
-			ds_5us();
-			ds_5us();
-			if (PINB & TD) result |= 0x80;
-			ds_70us();
-		}
-		bytes[i] = result;
-		crc = ds_crc(crc,bytes[i]);
+		data >>= 1;
+		if(ds_read_bit()) data |= 0x80;
 	}
-	//DDRD &= ~E_TD;
-	//PORTD &= ~E_TD;
-	
+	return data;
+}
+
+void ds_write_byte(uint8_t data)
+{
+	for(uint8_t i=0;i<8;i++){
+		ds_write_bit(data & 0x01);
+		data >>= 1;
+		wdt_reset();
+	}
+}
+
+uint8_t ds_read_rom_raw(uint8_t* bytes)
+{
+	if(ds_reset()) return 1;
+	ds_write_byte(0x33);
+	for(uint8_t i=0;i<8;i++){
+		uint8_t data = 0;
+		for(uint8_t j=0;j<8;j++){
+			data >>= 1;
+			if(ds_read_bit()) data |= 0x80;
+		}
+		bytes[i] = data;
+		wdt_reset();
+	}
+	return 0;
+}
+
+uint8_t ds_rom_valid(uint8_t* bytes)
+{
+	uint8_t crc = 0;
+	for(uint8_t i=0;i<8;i++) crc = ds_crc(crc,bytes[i]);
+	if(crc) return 0;
+	if((bytes[0] != DS1990_FAMILY) && (bytes[0] != DS1992_FAMILY) && (bytes[0] != DS1995_FAMILY)) return 0;
+	return 1;
+}
+
+uint8_t random_byte()
+{
+	random_state ^= TCNT0;
+	random_state ^= (uint16_t)PINC << 8;
+	if(!random_state) random_state = 0xA5C3;
+	if(random_state & 1) random_state = (random_state >> 1) ^ 0xB400;
+	else random_state >>= 1;
+	return (uint8_t)(random_state ^ (random_state >> 8));
+}
+
+void random_chunk(chunk* data)
+{
+	do{
+		data->bytes[0] = random_byte();
+		data->bytes[1] = random_byte();
+		data->bytes[2] = random_byte();
+		data->bytes[2] |= 0x80;
+		data->bytes[2] &= 0xBF;
+		uint8_t crc = 0;
+		for(uint8_t i=0;i<3;i++) crc = ds_crc(crc,data->bytes[i]);
+		data->bytes[3] = crc;
+	}while(key_bad(data));
+}
+
+void rw1990_write_bit(uint8_t bit)
+{
+	DDRB |= TD;
+	if(bit) ds_60us();
+	else ds_5us();
+	DDRB &= ~TD;
+	ds_10ms();
+}
+
+void rw1990_write_byte(uint8_t data)
+{
+	for(uint8_t i=0;i<8;i++){
+		rw1990_write_bit(data & 0x01);
+		data >>= 1;
+	}
+}
+
+uint8_t rw1990_write_rom(uint8_t* rom)
+{
+	if(ds_reset()) return 1;
+	ds_write_byte(0xCC);
+	ds_10ms();
+	if(ds_reset()) return 1;
+	ds_write_byte(0xD5);
+	for(uint8_t i=0;i<8;i++){
+		rw1990_write_byte(rom[i]);
+		wdt_reset();
+	}
+	ds_reset();
+	return 0;
+}
+
+uint8_t rw_common_write_rom(uint8_t* rom, uint8_t enable)
+{
+	if(ds_reset()) return 1;
+	ds_write_byte(enable);
+	rw1990_write_bit(1);
+	if(ds_reset()) return 1;
+	ds_write_byte(0xD5);
+	for(uint8_t i=0;i<8;i++){
+		rw1990_write_byte(rom[i]);
+		wdt_reset();
+	}
+	if(ds_reset()) return 1;
+	ds_write_byte(enable);
+	rw1990_write_bit(0);
+	return 0;
+}
+
+void delay_50ms()
+{
+	for(uint8_t i=0;i<5;i++) ds_10ms();
+}
+
+uint8_t rw2004_write_rom(uint8_t* rom)
+{
+	if(ds_reset()) return 1;
+	ds_write_byte(0x3C);
+	ds_write_byte(0x00);
+	ds_write_byte(0x00);
+	for(uint8_t i=0;i<8;i++){
+		ds_write_byte(rom[i]);
+		ds_read_byte();
+		ds_450us();
+		ds_70us();
+		ds_70us();
+		ds_write_bit(1);
+		delay_50ms();
+		if(ds_read_byte() != rom[i]) return 1;
+		wdt_reset();
+	}
+	ds_reset();
+	return 0;
+}
+
+uint8_t rewrite_invalid_rw_key(chunk* data)
+{
+	uint8_t rom[8];
+	uint8_t crc = 0;
+	if(ds_read_rom_raw(rom)) return 1;
+	if(ds_rom_valid(rom)) return 1;
+	random_state ^= rom[1] | ((uint16_t)rom[2] << 8);
+	random_chunk(data);
+	rom[0] = DS1990_FAMILY;
+	rom[1] = data->bytes[0];
+	rom[2] = data->bytes[1];
+	rom[3] = data->bytes[2];
+	rom[4] = random_byte();
+	rom[5] = random_byte();
+	rom[6] = random_byte();
+	for(uint8_t i=0;i<7;i++) crc = ds_crc(crc,rom[i]);
+	rom[7] = crc;
+	if(!rw1990_write_rom(rom)){
+		delay_01();
+		if(!key_read_stable(data)) return 0;
+	}
+	if(!rw_common_write_rom(rom,0xC1)){
+		delay_01();
+		if(!key_read_stable(data)) return 0;
+	}
+	if(!rw2004_write_rom(rom)){
+		delay_01();
+		if(!key_read_stable(data)) return 0;
+	}
+	return 1;
+}
+
+uint8_t invalid_rw1990_present()
+{
+	uint8_t rom[8];
+	if(ds_read_rom_raw(rom)) return 0;
+	return !ds_rom_valid(rom);
+}
+
+uint8_t ds_read(chunk* data)
+{
+	uint8_t crc = 0;
+	uint8_t bytes[8];
+	if(ds_read_rom_raw(bytes)) return 1;
+	for(uint8_t i=0;i<8;i++) crc = ds_crc(crc,bytes[i]);
 	if(crc) return 2;
 	if((bytes[0] != DS1990_FAMILY) && (bytes[0] != DS1992_FAMILY) && (bytes[0] != DS1995_FAMILY)) return 2;
 
@@ -652,6 +847,21 @@ add_result key_add(chunk* data)
 	address = (address - USER_KEYS_ADDR) >> 2;
 	if(users_count_write(address + 1)) return ADD_ERROR;
 	return ADD_OK;
+}
+
+add_result key_prepare_and_add(chunk* data, key* found)
+{
+	uint16_t address = 0;
+	key result = NOT_FOUND;
+	if(key_read_stable(data)){
+		if(!invalid_rw1990_present()) return ADD_NO_KEY;
+		if(rewrite_invalid_rw_key(data)) return ADD_BAD;
+	}
+	if(key_find(data,&address,&result)) return ADD_ERROR;
+	if(found) *found = result;
+	if(result == MASTER_KEY) return ADD_DUP;
+	if(result == FOUND) return ADD_DUP;
+	return key_add(data);
 }
 
 /*************************************************************************	
@@ -833,6 +1043,31 @@ uint8_t key_read_stable(chunk* data)
 	return 0;
 }
 
+uint8_t same_key_present(chunk* data)
+{
+	chunk check;
+	if(key_read(&check)) return 0;
+	if(key_bad(&check)) return 0;
+	return !chunk_compare(data,&check);
+}
+
+uint8_t master_hold_action(chunk* data)
+{
+	uint8_t time = 0;
+	uint8_t miss = 0;
+	while(time < MASTER_SERVICE_TIME){
+		delay_01();
+		wdt_reset();
+		if(same_key_present(data)){
+			time++;
+			miss = 0;
+		}else{
+			if(++miss >= 3) return 1;
+		}
+	}
+	return 2;
+}
+
 uint8_t sw_raw_pressed()
 {
 	return !(PINC & SW);
@@ -885,12 +1120,35 @@ void delay_5s()
 	}
 }
 
+void service_exit()
+{
+	beep_long(2);
+	service_active = 0;
+}
+
+uint8_t reset_button_held()
+{
+	uint16_t time = 0;
+	if((PINB & SYS) || !sw_pressed()) return 0;
+	while(sw_raw_pressed()){
+		if(PINB & SYS) return 0;
+		delay_01();
+		wdt_reset();
+		time++;
+		if(time >= 100){
+			sw_wait_release();
+			return 1;
+		}
+	}
+	return 0;
+}
+
 void set_open_time()
 {
 	chunk buffer;
 	uint16_t seconds = 0;
 	while(!sw_pressed()){
-		if(PINB & SYS) return;
+		if(!service_active) return;
 		wdt_reset();
 	}
 	sw_wait_release();
@@ -908,7 +1166,7 @@ void set_open_time()
 				else beep(2);
 				return;
 			}
-			if(PINB & SYS) return;
+			if(!service_active) return;
 			delay_01();
 			wdt_reset();
 		}
@@ -927,7 +1185,7 @@ void set_lock_mode()
 {
 	uint8_t mode = lock_mode();
 	lock_mode_signal(mode);
-	while(!(PINB & SYS)){
+	while(service_active){
 		uint8_t action = sw_action();
 		if(action == 1){
 			mode = (mode == LOCK_MODE_MAGNETIC) ? LOCK_MODE_MECH : LOCK_MODE_MAGNETIC;
@@ -952,7 +1210,7 @@ void set_auto_collect_mode()
 {
 	uint8_t mode = auto_collect_mode();
 	auto_collect_signal(mode);
-	while(!(PINB & SYS)){
+	while(service_active){
 		uint8_t action = sw_action();
 		if(action == 1){
 			mode = (mode == AUTO_COLLECT_OFF) ? AUTO_COLLECT_ON : AUTO_COLLECT_OFF;
@@ -970,25 +1228,26 @@ void set_auto_collect_mode()
 void stream_add()
 {
 	chunk buffer;
-	key search;
+	key found;
 	while(1){
-		if(PINB & SYS) return;
+		if(!service_active) return;
 		if(sw_pressed()){ sw_wait_release(); return; }
-		search = key_get(&buffer);
-		switch(search){
-			case NO_KEY: break;
-			case MASTER_KEY: { wait_key_release(); break; }
-			case FOUND: { beep(2); wait_key_release(); break; }
-			case NOT_FOUND:{
-				add_result add = key_add(&buffer);
-				if(add == ADD_OK) beep_long(1);
-				else if(add == ADD_DUP) beep(2);
-				else beep_err();
-				wait_key_release();
-				break;
-			}
-			default: { beep_err(); break; }
+		found = NOT_FOUND;
+		add_result add = key_prepare_and_add(&buffer,&found);
+		if(add == ADD_NO_KEY){
+			wdt_reset();
+			continue;
 		}
+		if(found == MASTER_KEY){
+			if(master_hold_action(&buffer) == 2) service_exit();
+		}else if(add == ADD_OK) {
+			beep_long(1);
+		}else if(add == ADD_DUP) {
+			beep(2);
+		}else{
+			beep_err();
+		}
+		wait_key_release();
 		wdt_reset();
 	}
 }
@@ -998,12 +1257,16 @@ void stream_delete()
 	chunk buffer;
 	key search;
 	while(1){
-		if(PINB & SYS) return;
+		if(!service_active) return;
 		if(sw_pressed()){ sw_wait_release(); return; }
 		search = key_get(&buffer);
 		switch(search){
 			case NO_KEY: break;
-			case MASTER_KEY: { wait_key_release(); break; }
+			case MASTER_KEY: {
+				if(master_hold_action(&buffer) == 2) service_exit();
+				wait_key_release();
+				break;
+			}
 			case FOUND: {
 				uint8_t del = key_delete(&buffer);
 				if(del == 0) beep(1);
@@ -1021,9 +1284,10 @@ void stream_delete()
 
 void setup_menu()
 {
+	chunk buffer;
 	setup_mode setup = SET_ADD;
 	setup_signal(setup);
-	while(!(PINB & SYS)){
+	while(service_active){
 		uint8_t action = sw_action();
 		if(action == 1){
 			setup = (setup == SET_AUTO_COLLECT) ? SET_ADD : setup + 1;
@@ -1037,7 +1301,15 @@ void setup_menu()
 				case SET_LOCK: set_lock_mode(); continue;
 				case SET_AUTO_COLLECT: set_auto_collect_mode(); continue;
 			}
+			if(!service_active) break;
 			setup_signal(setup);
+		}
+		key search = key_get(&buffer);
+		if(search == MASTER_KEY){
+			if(master_hold_action(&buffer) == 2) service_exit();
+			wait_key_release();
+		}else if(search != NO_KEY){
+			wait_key_release();
 		}
 		wdt_reset();
 	}
@@ -1049,7 +1321,7 @@ uint8_t master_reset_flow()
 	uint8_t led_timer = 0;
 	if(storage_clear_all()){ beep_err(); return 0; }
 	beep(3);
-	while(!(PINB & SYS)){
+	while(service_active){
 		led_timer++;
 		if(led_timer >= 8){
 			if(PORTB & GREEN) led_off();
@@ -1066,7 +1338,7 @@ uint8_t master_reset_flow()
 		}
 		wdt_reset();
 	}
-	while(!(PINB & SYS)){
+	while(service_active){
 		if(key_read_stable(&buffer)){
 			wdt_reset();
 			continue;
@@ -1083,7 +1355,7 @@ uint8_t master_reset_flow()
 			wait_key_release();
 			storage_check_once();
 			while(!sw_pressed()){
-				if(PINB & SYS) return 0;
+				if(!service_active) return 0;
 				wdt_reset();
 			}
 			sw_wait_release();
@@ -1097,35 +1369,31 @@ uint8_t master_reset_flow()
 	return 0;
 }
 
-void jumper_service()
+void service_mode()
 {
 	chunk buffer;
+	service_active = 1;
 	lock_on();
 	beep_long(3);
-	while(!(PINB & SYS)){
+	wait_key_release();
+	setup_menu();
+	storage_check_once();
+	if(service_active) beep_long(3);
+	while(service_active){
 		lock_on();
-		if(sw_pressed()){
-			uint16_t time = 0;
-			while(sw_raw_pressed()){
-				delay_01();
-				wdt_reset();
-				time++;
-				if(time >= 100){
-					sw_wait_release();
-					if(master_reset_flow()){
-						setup_menu();
-					}
-					break;
-				}
+		if(reset_button_held()){
+			if(master_reset_flow()){
+				setup_menu();
 			}
 		}
 		key search = key_get(&buffer);
 		if(search == MASTER_KEY){
-			beep_long(1);
+			if(master_hold_action(&buffer) == 2){
+				service_exit();
+				wait_key_release();
+				break;
+			}
 			wait_key_release();
-			setup_menu();
-			storage_check_once();
-			if(!(PINB & SYS)) beep_long(3);
 		}else if(search != NO_KEY){
 			wait_key_release();
 		}
@@ -1139,12 +1407,7 @@ int main(void)
 	WDTCR = (1<<WDE)|(1<<WDP2)|(1<<WDP1)|(1<<WDP0);
 	wdt_reset();
 	init();
-	uint8_t cold_service = 0;
-	if(!(PINB & SYS)){
-		jumper_service();
-		cold_service = 1;
-	}
-	storage_check_start(cold_service);
+	storage_check_start(0);
 	if(storage_error){
 		red();
 	}
@@ -1164,7 +1427,14 @@ int main(void)
 					else red();
 					led_timer = 0;
 				}
-				if(!(PINB & SYS)){ mode = JUMPER; break; }
+				if(reset_button_held()){
+					service_active = 1;
+					if(master_reset_flow()){
+						setup_menu();
+					}
+					service_active = 0;
+					break;
+				}
 				if(sw_pressed()){
 					open();
 					break;
@@ -1177,9 +1447,22 @@ int main(void)
 					break;
 				}
 				if(auto_collect_mode() == AUTO_COLLECT_ON){
-					if(!key_read(&buffer) && !key_bad(&buffer)){
-						key_add(&buffer);
-						open();
+					key auto_search = NOT_FOUND;
+					add_result add = key_prepare_and_add(&buffer,&auto_search);
+					if(add != ADD_NO_KEY){
+						if(auto_search == MASTER_KEY){
+							if(master_hold_action(&buffer) == 2){
+								storage_ok();
+								mode = SERVICE;
+							}else{
+								storage_ok();
+								open();
+							}
+						}else if(add == ADD_OK || add == ADD_DUP){
+							open();
+						}else{
+							beep_err();
+						}
 						wait_key_release();
 					}
 					break;
@@ -1196,8 +1479,13 @@ int main(void)
 						break;
 					}
 					case MASTER_KEY:{
-						storage_ok();
-						open();
+						if(master_hold_action(&buffer) == 2){
+							storage_ok();
+							mode = SERVICE;
+						}else{
+							storage_ok();
+							open();
+						}
 						break;
 					}
 					case FOUND:{
@@ -1213,8 +1501,8 @@ int main(void)
 				}
 				break;
 			}
-			case JUMPER:{//установлена перемычка
-				jumper_service();
+			case SERVICE:{//сервисный режим
+				service_mode();
 				mode = NORMAL;
 				break;
 			}
