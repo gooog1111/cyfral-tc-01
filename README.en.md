@@ -13,9 +13,9 @@
 
 
 <!-- STATS_START -->
-<!-- auto-updated by GitHub Actions · 2026-07-08 02:00 UTC -->
+<!-- auto-updated by GitHub Actions · 2026-07-08 03:00 UTC -->
 
-[![Views local](https://img.shields.io/badge/Views_local-1-ff6900?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
+[![Views local](https://img.shields.io/badge/Views_local-2-ff6900?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
 [![Views GitHub](https://img.shields.io/badge/Views_GitHub-27-ff6900?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
 [![Unique visitors](https://img.shields.io/badge/Unique-5-blue?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
 [![Clones](https://img.shields.io/badge/Clones-1878-purple?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
@@ -50,7 +50,7 @@
 
 
 <!-- ISSUES_START -->
-<!-- auto-updated by GitHub Actions · 2026-07-08 02:00 UTC -->
+<!-- auto-updated by GitHub Actions · 2026-07-08 03:00 UTC -->
 
 ## Issues
 
@@ -401,7 +401,7 @@ After reset:
 
 | Event | Signal |
 | --- | --- |
-| Entering service mode | `3` long |
+| Entering service mode | `3` длинных |
 | Exiting service mode | `2` long |
 | Menu item | `1..5` short |
 | Selecting a menu item | `1` long |
@@ -423,7 +423,7 @@ The firmware is assembled using the usual AVR toolchain under `ATmega8`:
 - `avr-objcopy`;
 - `avr-size`;
 - `make`;
-- `avrdude` for firmware.
+- `avrdude` для прошивки.
 
 ## #Windows
 
