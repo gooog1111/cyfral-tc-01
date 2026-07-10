@@ -13,9 +13,9 @@
 
 
 <!-- STATS_START -->
-<!-- auto-updated by GitHub Actions · 2026-07-10 12:00 UTC -->
+<!-- auto-updated by GitHub Actions · 2026-07-10 13:00 UTC -->
 
-[![Views local](https://img.shields.io/badge/Views_local-58-ff6900?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
+[![Views local](https://img.shields.io/badge/Views_local-59-ff6900?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
 [![Views GitHub](https://img.shields.io/badge/Views_GitHub-13-ff6900?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
 [![Unique visitors](https://img.shields.io/badge/Unique-3-blue?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
 [![Clones](https://img.shields.io/badge/Clones-2361-purple?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
@@ -50,7 +50,7 @@
 
 
 <!-- ISSUES_START -->
-<!-- auto-updated by GitHub Actions · 2026-07-10 12:00 UTC -->
+<!-- auto-updated by GitHub Actions · 2026-07-10 13:00 UTC -->
 
 ## Issues
 
@@ -85,54 +85,54 @@
 
 
 
-## Цифрал TC-01
+## Digital TC-01
 
-Ошибки, предложения по добавлению функционала и другие задачи описывайте в [Issues](https://github.com/gooog1111/cyfral-tc-01/issues).
+Describe errors, suggestions for adding functionality and other tasks in [Issues](https://github.com/gooog1111/cyfral-tc-01/issues).
 
-Проект не является оригинальной разработкой. Исходный код взят из публикации [Cyfral TC-01](https://allaboutdomofon.blogspot.com/2021/05/cyfral-tc-01.html), этот репозиторий содержит доработанную и документированную версию.
+The project is not an original development. The source code is taken from the publication [Cyfral TC-01](https://allaboutdomofon.blogspot.com/2021/05/cyfral-tc-01.html), this repository contains a modified and documented version.
 
-Прошивка для контроллера доступа Цифрал TC-01 на `ATmega8A`. Устройство работает с ключами iButton/1-Wire и совместимыми ключами, хранит базу во внешней EEPROM `24C64`, управляет электромагнитным или электромеханическим замком, имеет сервисное меню, кнопку открытия, светодиодную индикацию и зуммер.
+Firmware for access controller Digital TC-01 on `ATmega8A`. The device works with iButton/1-Wire keys and compatible keys, stores the base in an external EEPROM `24C64`, controls an electromagnetic or electromechanical lock, has a service menu, an opening button, LED indication and a buzzer.
 
-## Текущая версия
+## Current version
 
-Основные изменения этой версии:
+Main changes in this version:
 
-- добавлена поддержка Dallas/Maxim `DS1992L+F5` и `DS1995L+F5`;
-- сохранена поддержка `DS1990A/RW1990` и совместимых ключей;
-- режим замка настраивается через 4-й пункт сервисного меню;
-- автосбор ключей настраивается через 5-й пункт сервисного меню и по умолчанию выключен;
-- для этой платы выход `LOCK` работает активным низким уровнем: удержание магнита соответствует `PC1 = 0`;
-- короткие звуковые сигналы сбрасывают watchdog, поэтому 4-й пункт меню больше не вызывает перезагрузку;
-- прошивка собирается под `F_CPU=4000000UL`, fuse `LOW=0xE3`.
+- added support for Dallas/Maxim `DS1992L+F5` and `DS1995L+F5`;
+- support for `DS1990A/RW1990` and compatible keys is preserved;
+- the lock mode is configured through the 4th item of the service menu;
+- automatic key collection is configured through the 5th item of the service menu and is disabled by default;
+- for this board, the `LOCK` output operates at an active low level: magnet retention corresponds to `PC1 = 0`;
+- short beeps reset the watchdog, so the 4th menu item no longer causes a reboot;
+- the firmware is compiled under `F_CPU=4000000UL`, fuse `LOW=0xE3`.
 
-## Поддерживаемые ключи
+## Supported keys
 
-Прошивка пытается прочитать ключ несколькими способами:
+The firmware tries to read the key in several ways:
 
-| Тип | Поддержка | Примечание |
+| Type | Support | Note |
 | --- | --- | --- |
-| `DS1990A`, `RW1990`, аналоги | да | Dallas/1-Wire family `0x01` |
-| `DS1992L+F5` | да | Dallas/1-Wire family `0x08` |
-| `DS1995L+F5` | да | Dallas/1-Wire family `0x0A` |
-| Metakom/MK-совместимые | частичная | читаются отдельным декодером `mk_rx()` |
-| Cyfral-совместимые | частичная | читаются отдельным декодером `cyfral_rx()`  |
+| `DS1990A`, `RW1990`, analogues | yes | Dallas/1-Wire family `0x01` |
+| `DS1992L+F5` | yes | Dallas/1-Wire family `0x08` |
+| `DS1995L+F5` | yes | Dallas/1-Wire family `0x0A` |
+| Metakom/MK-compatible | partial | read by a separate decoder `mk_rx()` |
+| Cyfral-compatible | partial | read by a separate decoder `cyfral_rx()` |
 
-Важное ограничение: база ключей пока использует старый 4-байтный внутренний формат. Для Dallas/1-Wire ключей читается полный 64-битный ROM, проверяется CRC, затем идентификатор сворачивается в 4 байта для совместимости с уже существующей базой EEPROM. Это сохраняет совместимость с текущими записанными ключами, но не использует весь 48-битный серийный номер DS1992/DS1995.
+An important limitation: the key database currently uses the old 4-byte internal format. For Dallas/1-Wire keys, the full 64-bit ROM is read, the CRC is checked, then the identifier is collapsed into 4 bytes for compatibility with the existing EEPROM base. This maintains compatibility with currently recorded keys, but does not use the entire DS1992/DS1995 48-bit serial number.
 
-## Контроллер
+## Controller
 
-Целевой микроконтроллер: `ATmega8A-PU`, корпус `PDIP-28`.
+Target microcontroller: `ATmega8A-PU`, package `PDIP-28`.
 
-Параметры:
+Parameters:
 
 - Flash: `8 KB`;
 - SRAM: `1 KB`;
-- внутренняя EEPROM: `512 B`;
-- питание логики: `5 V`;
-- тактирование: внутренний RC около `4 MHz`;
-- сборка: `avr-gcc`, цель `atmega8`, `F_CPU=4000000UL`.
+- internal EEPROM: `512 B`;
+- logic power: `5 V`;
+- clocking: internal RC about `4 MHz`;
+- assembly: `avr-gcc`, target `atmega8`, `F_CPU=4000000UL`.
 
-Fuse-биты, использованные при прошивке:
+Fuse bits used for firmware:
 
 ```text
 lfuse = 0xE3
@@ -140,139 +140,139 @@ hfuse = 0x99
 lock  = 0xFF
 ```
 
-`lock=0xFF` означает, что Flash не заблокирована. Финальную блокировку можно ставить отдельно только после полной проверки устройства.
+`lock=0xFF` means Flash is not blocked. The final blocking can be set separately only after a complete check of the device.## Распиновка ATmega8A-PU
 
-## Pinout ATmega8A-PU
-
-`PDIP-28` body, top view, key/notch on top.
+Корпус `PDIP-28`, вид сверху, ключ/выемка сверху.
 
 ![Распиновка ATmega8A-PU](atmega8a_pin.png)
 
-| Leg | Port | Destination |
+| Нога | Порт | Назначение |
 | ---: | --- | --- |
 | 1 | `PC6/RESET` | Reset, ISP |
-| 2 | `PD0/RXD` | not used |
-| 3 | `PD1/TXD` | soft-UART debugging |
-| 4 | `PD2/INT0` | not used |
-| 5 | `PD3/INT1` | not used |
-| 6 | `PD4/T0` | not used |
-| 7 | `VCC` | food `+5V` |
-| 8 | `GND` | earth |
-| 9 | `PB6/XTAL1` | not used, internal RC |
-| 10 | `PB7/XTAL2` | not used, internal RC |
+| 2 | `PD0/RXD` | не используется |
+| 3 | `PD1/TXD` | софт-UART отладка |
+| 4 | `PD2/INT0` | не используется |
+| 5 | `PD3/INT1` | не используется |
+| 6 | `PD4/T0` | не используется |
+| 7 | `VCC` | питание `+5V` |
+| 8 | `GND` | земля |
+| 9 | `PB6/XTAL1` | не используется, внутренний RC |
+| 10 | `PB7/XTAL2` | не используется, внутренний RC |
 | 11 | `PD5/T1` | `E_TD` |
 | 12 | `PD6/AIN0` | `TC` |
 | 13 | `PD7/AIN1` | `E_TC` |
-| 14 | `PB0/ICP1` | not used |
-| 15 | `PB1/OC1A` | `TD`, Dallas/1-Wire key line |
-| 16 | `PB2/SS/OC1B` | not used |
-| 17 | `PB3/MOSI/OC2` | `RED`, red LED, ISP MOSI |
-| 18 | `PB4/MISO` | `XP3`, hard reset enable, ISP MISO |
-| 19 | `PB5/SCK` | `GREEN`, green LED, ISP SCK |
-| 20 | `AVCC` | power supply of the analog part, connect to `+5V` |
-| 21 | `AREF` | not used |
-| 22 | `GND` | earth |
-| 23 | `PC0/ADC0` | `WP`, write protection EEPROM 24C64 |
-| 24 | `PC1/ADC1` | `LOCK`, lock control |
-| 25 | `PC2/ADC2` | `BEEP`, buzzer |
-| 26 | `PC3/ADC3` | `SW`, door open button |
+| 14 | `PB0/ICP1` | не используется |
+| 15 | `PB1/OC1A` | `TD`, линия ключа Dallas/1-Wire |
+| 16 | `PB2/SS/OC1B` | не используется |
+| 17 | `PB3/MOSI/OC2` | `RED`, красный LED, ISP MOSI |
+| 18 | `PB4/MISO` | `XP3`, разрешение полного сброса, ISP MISO |
+| 19 | `PB5/SCK` | `GREEN`, зелёный LED, ISP SCK |
+| 20 | `AVCC` | питание аналоговой части, подключить к `+5V` |
+| 21 | `AREF` | не используется |
+| 22 | `GND` | земля |
+| 23 | `PC0/ADC0` | `WP`, защита записи EEPROM 24C64 |
+| 24 | `PC1/ADC1` | `LOCK`, управление замком |
+| 25 | `PC2/ADC2` | `BEEP`, зуммер |
+| 26 | `PC3/ADC3` | `SW`, кнопка открытия двери |
 | 27 | `PC4/ADC4/SDA` | `SDA`, EEPROM 24C64 |
 | 28 | `PC5/ADC5/SCL` | `SCL`, EEPROM 24C64 |
 
-ISP lines `MOSI/MISO/SCK` are simultaneously used by the board for LED and pin `XP3`. If the ArduinoISP is not flashing the controller, temporarily disable external loads with `PB3/PB4/PB5` or check that they are not interfering with the SPI levels.
+Линии ISP `MOSI/MISO/SCK` одновременно используются платой для LED и контакта `XP3`. Если ArduinoISP не прошивает контроллер, временно отключить внешние нагрузки с `PB3/PB4/PB5` или проверить, что они не мешают уровням SPI.
 
-## Connection
+## Подключение
 
-Photo of the board:
+Фото платы:
 
 ![Плата TC-01](layout.jpg)
 
 ![Схема подключения TC-01](connect.png)
 
-Main nodes:
+Основные узлы:
 
-- `TD` (`PB1`) - Dallas/1-Wire key reading line;
-- `SDA/SCL` (`PC4/PC5`) - software I2C for `24C64`;
-- `WP` (`PC0`) - record protection management `24C64`;
-- `LOCK` (`PC1`) - power key control output for the lock;
-- `BEEP` (`PC2`) - buzzer;
-- `SW` (`PC3`) - button to open the lock;
-- `XP3` (`PB4`) - full reset enable jumper, not used to enter the service mode;
-- `RED/GREEN` (`PB3/PB5`) - indication.
+- `TD` (`PB1`) - линия чтения ключей Dallas/1-Wire;
+- `SDA/SCL` (`PC4/PC5`) - программный I2C для `24C64`;
+- `WP` (`PC0`) - управление защитой записи `24C64`;
+- `LOCK` (`PC1`) - выход управления силовым ключом замка;
+- `BEEP` (`PC2`) - зуммер;
+- `SW` (`PC3`) - кнопка открытия замка;
+- `XP3` (`PB4`) - перемычка разрешения полного сброса, для входа в сервисный режим не используется;
+- `RED/GREEN` (`PB3/PB5`) - индикация.
 
-Board terminals:
+Клеммы платы:
 
-| Contacts | Destination |
+| Контакты | Назначение |
 | --- | --- |
-| `1`, `2` | device power `12 V AC` || `3`, `4` | key reader, contact `4` - general minus |
-| `4`, `5` | lock opening button `SW`, contact `4` - common minus |
-| `M+` and minus | exit to the castle; on `M+` to the lock there should be about `19 V DC` |
+| `1`, `2` | питание устройства `12 V AC` |
+| `3`, `4` | считыватель ключей, контакт `4` - общий минус |
+| `4`, `5` | кнопка открытия замка `SW`, контакт `4` - общий минус |
+| `M+` и минус | выход на замок; на `M+` к замку должно быть около `19 V DC` |
 
-Contact `4` is used as a common negative for the reader and the open button.
+Контакт `4` используется как общий минус для считывателя и кнопки открытия.
 
-## Lock control
+## Управление замком
 
-The `LOCK` output drives the power transistor active low.
+Выход `LOCK` управляет силовым транзистором активным низким уровнем.
 
-## #Mode 1: Electromagnetic lock
+## # Режим 1: электромагнитный замок
 
-Used for a magnet that needs constant power when closed.
+Используется для магнита, которому нужно постоянное питание в закрытом состоянии.
 
-- Waiting: `PC1/LOCK = 0`, transistor is open, magnet is holding.
-- Opening: `PC1/LOCK = 1`, the transistor is closed, power is removed from the magnet.
-- After the opening timer: `PC1/LOCK = 0` again.
+- Ожидание: `PC1/LOCK = 0`, транзистор открыт, магнит удерживает.
+- Открытие: `PC1/LOCK = 1`, транзистор закрыт, питание с магнита снимается.
+- После таймера открытия: снова `PC1/LOCK = 0`.
 
-## # Mode 2: electromechanical lock
+## # Режим 2: электромеханический замок
 
-Used for a lock to which power is supplied only during opening.
+Используется для замка, которому питание подаётся только на время открытия.
 
-- Waiting: `PC1/LOCK = 1`, the transistor is closed, there is no power to the lock.
-- Opening: `PC1/LOCK = 0`, the transistor is open, power is supplied.
-- After the opening timer: `PC1/LOCK = 1` again.
+- Ожидание: `PC1/LOCK = 1`, транзистор закрыт, питания на замке нет.
+- Открытие: `PC1/LOCK = 0`, транзистор открыт, питание подаётся.
+- После таймера открытия: снова `PC1/LOCK = 1`.
 
-The mode is stored in the internal EEPROM of the ATmega8A at `0x09`:
+Режим хранится во внутренней EEPROM ATmega8A по адресу `0x09`:
 
-- `0xFF` - mode 1, electromagnetic;
-- `0x00` - mode 2, electromechanical.
+- `0xFF` - режим 1, электромагнитный;
+- `0x00` - режим 2, электромеханический.
 
-If the value is corrupted, the firmware restores mode 1.
+Если значение повреждено, прошивка восстанавливает режим 1.
 
-The autocollection mode is stored at `0x0A`:
+Режим автосбора хранится по адресу `0x0A`:
 
-- `0xFF` - auto-collection is disabled;
-- `0x00` - auto collection is enabled.
+- `0xFF` - автосбор выключен;
+- `0x00` - автосбор включён.
 
-If the value is damaged and after a complete reset, auto-collection is turned off.
+При повреждённом значении и после полного сброса автосбор выключается.
 
-## Opening time
+## Время открытия
 
-The opening time is stored in an external EEPROM `24C64` in the service block. The unit of measurement is `100 ms`.
+Время открытия хранится во внешней EEPROM `24C64` в служебном блоке. Единица измерения - `100 ms`.
 
-- default value: `0x0032`, that is, `50 * 100 ms = 5 секунд`;
-- maximum: `0x0C00`, that is, about `307.2 секунд`;
-- if the value is corrupted or too large, the default value is used.
+- значение по умолчанию: `0x0032`, то есть `50 * 100 ms = 5 секунд`;
+- максимум: `0x0C00`, то есть около `307.2 секунд`;
+- если значение повреждено или слишком большое, используется значение по умолчанию.
 
-During opening, the buzzer is constantly on, the green LED is on, the `LOCK` output is switched to the opening state.
+Во время открытия зуммер включён постоянно, зелёный LED горит, выход `LOCK` переведён в состояние открытия.
 
-## EEPROM memory 24C64
+## Память EEPROM 24C64
 
-External EEPROM `24C64` is used for the key and parameter database.
+Внешняя EEPROM `24C64` используется для базы ключей и параметров.
 
-| Address | Size | Destination |
+| Адрес | Размер | Назначение |
 | --- | ---: | --- |
-| `0x0000..0x0003` | 4 bytes | service block |
-| `0x0000..0x0001` | 2 bytes | number of user keys |
-| `0x0002..0x0003` | 2 bytes | opening time in ticks of 100 ms |
-| `0x0004..0x0007` | 4 bytes | master key |
-| `0x0008..0x1FFF` | 4 bytes | custom keys |
+| `0x0000..0x0003` | 4 байта | служебный блок |
+| `0x0000..0x0001` | 2 байта | количество пользовательских ключей |
+| `0x0002..0x0003` | 2 байта | время открытия в тиках по 100 ms |
+| `0x0004..0x0007` | 4 байта | мастер-ключ |
+| `0x0008..0x1FFF` | по 4 байта | пользовательские ключи |
 
-Empty key cell: `0xFFFFFFFF`. This key is prohibited from being written to.
+Пустая ячейка ключа: `0xFFFFFFFF`. Такой ключ запрещён к записи.
 
-At startup, a self-diagnosis is performed:
+При старте выполняется самодиагностика:
 
-- EEPROM availability is checked;
-- the master key is checked;
-- CRC keys are checked;- проверяется отсутствие непустых ключей после первой пустой ячейки;
+- проверяется доступность EEPROM;
+- проверяется мастер-ключ;
+- проверяется CRC ключей;
+- проверяется отсутствие непустых ключей после первой пустой ячейки;
 - проверяется счётчик ключей в заголовке.
 
 После трёх подряд ошибок EEPROM включается аварийное поведение: корректно прочитанный ключ может открыть дверь по общему таймеру.
