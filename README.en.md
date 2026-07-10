@@ -13,9 +13,9 @@
 
 
 <!-- STATS_START -->
-<!-- auto-updated by GitHub Actions · 2026-07-10 07:00 UTC -->
+<!-- auto-updated by GitHub Actions · 2026-07-10 08:00 UTC -->
 
-[![Views local](https://img.shields.io/badge/Views_local-53-ff6900?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
+[![Views local](https://img.shields.io/badge/Views_local-54-ff6900?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
 [![Views GitHub](https://img.shields.io/badge/Views_GitHub-23-ff6900?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
 [![Unique visitors](https://img.shields.io/badge/Unique-5-blue?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
 [![Clones](https://img.shields.io/badge/Clones-2197-purple?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
@@ -50,7 +50,7 @@
 
 
 <!-- ISSUES_START -->
-<!-- auto-updated by GitHub Actions · 2026-07-10 07:00 UTC -->
+<!-- auto-updated by GitHub Actions · 2026-07-10 08:00 UTC -->
 
 ## Issues
 
@@ -85,54 +85,54 @@
 
 
 
-## Цифрал TC-01
+## Digital TC-01
 
-Ошибки, предложения по добавлению функционала и другие задачи описывайте в [Issues](https://github.com/gooog1111/cyfral-tc-01/issues).
+Describe errors, suggestions for adding functionality and other tasks in [Issues](https://github.com/gooog1111/cyfral-tc-01/issues).
 
-Проект не является оригинальной разработкой. Исходный код взят из публикации [Cyfral TC-01](https://allaboutdomofon.blogspot.com/2021/05/cyfral-tc-01.html), этот репозиторий содержит доработанную и документированную версию.
+The project is not an original development. The source code is taken from the publication [Cyfral TC-01](https://allaboutdomofon.blogspot.com/2021/05/cyfral-tc-01.html), this repository contains a modified and documented version.
 
-Прошивка для контроллера доступа Цифрал TC-01 на `ATmega8A`. Устройство работает с ключами iButton/1-Wire и совместимыми ключами, хранит базу во внешней EEPROM `24C64`, управляет электромагнитным или электромеханическим замком, имеет сервисное меню, кнопку открытия, светодиодную индикацию и зуммер.
+Firmware for access controller Digital TC-01 on `ATmega8A`. The device works with iButton/1-Wire keys and compatible keys, stores the base in an external EEPROM `24C64`, controls an electromagnetic or electromechanical lock, has a service menu, an opening button, LED indication and a buzzer.
 
-## Текущая версия
+## Current version
 
-Основные изменения этой версии:
+Main changes in this version:
 
-- добавлена поддержка Dallas/Maxim `DS1992L+F5` и `DS1995L+F5`;
-- сохранена поддержка `DS1990A/RW1990` и совместимых ключей;
-- режим замка настраивается через 4-й пункт сервисного меню;
-- автосбор ключей настраивается через 5-й пункт сервисного меню и по умолчанию выключен;
-- для этой платы выход `LOCK` работает активным низким уровнем: удержание магнита соответствует `PC1 = 0`;
-- короткие звуковые сигналы сбрасывают watchdog, поэтому 4-й пункт меню больше не вызывает перезагрузку;
-- прошивка собирается под `F_CPU=4000000UL`, fuse `LOW=0xE3`.
+- added support for Dallas/Maxim `DS1992L+F5` and `DS1995L+F5`;
+- support for `DS1990A/RW1990` and compatible keys is preserved;
+- the lock mode is configured through the 4th item of the service menu;
+- automatic key collection is configured through the 5th item of the service menu and is disabled by default;
+- for this board, the `LOCK` output operates at an active low level: magnet retention corresponds to `PC1 = 0`;
+- short beeps reset the watchdog, so the 4th menu item no longer causes a reboot;
+- the firmware is compiled under `F_CPU=4000000UL`, fuse `LOW=0xE3`.
 
-## Поддерживаемые ключи
+## Supported keys
 
-Прошивка пытается прочитать ключ несколькими способами:
+The firmware tries to read the key in several ways:
 
-| Тип | Поддержка | Примечание |
+| Type | Support | Note |
 | --- | --- | --- |
-| `DS1990A`, `RW1990`, аналоги | да | Dallas/1-Wire family `0x01` |
-| `DS1992L+F5` | да | Dallas/1-Wire family `0x08` |
-| `DS1995L+F5` | да | Dallas/1-Wire family `0x0A` |
-| Metakom/MK-совместимые | частичная | читаются отдельным декодером `mk_rx()` |
-| Cyfral-совместимые | частичная | читаются отдельным декодером `cyfral_rx()`  |
+| `DS1990A`, `RW1990`, analogues | yes | Dallas/1-Wire family `0x01` |
+| `DS1992L+F5` | yes | Dallas/1-Wire family `0x08` |
+| `DS1995L+F5` | yes | Dallas/1-Wire family `0x0A` |
+| Metakom/MK-compatible | partial | read by a separate decoder `mk_rx()` |
+| Cyfral-compatible | partial | read by a separate decoder `cyfral_rx()` |
 
-Важное ограничение: база ключей пока использует старый 4-байтный внутренний формат. Для Dallas/1-Wire ключей читается полный 64-битный ROM, проверяется CRC, затем идентификатор сворачивается в 4 байта для совместимости с уже существующей базой EEPROM. Это сохраняет совместимость с текущими записанными ключами, но не использует весь 48-битный серийный номер DS1992/DS1995.
+An important limitation: the key database currently uses the old 4-byte internal format. For Dallas/1-Wire keys, the full 64-bit ROM is read, the CRC is checked, then the identifier is collapsed into 4 bytes for compatibility with the existing EEPROM base. This maintains compatibility with currently recorded keys, but does not use the entire DS1992/DS1995 48-bit serial number.
 
-## Контроллер
+## Controller
 
-Целевой микроконтроллер: `ATmega8A-PU`, корпус `PDIP-28`.
+Target microcontroller: `ATmega8A-PU`, package `PDIP-28`.
 
-Параметры:
+Parameters:
 
 - Flash: `8 KB`;
 - SRAM: `1 KB`;
-- внутренняя EEPROM: `512 B`;
-- питание логики: `5 V`;
-- тактирование: внутренний RC около `4 MHz`;
-- сборка: `avr-gcc`, цель `atmega8`, `F_CPU=4000000UL`.
+- internal EEPROM: `512 B`;
+- logic power: `5 V`;
+- clocking: internal RC about `4 MHz`;
+- assembly: `avr-gcc`, target `atmega8`, `F_CPU=4000000UL`.
 
-Fuse-биты, использованные при прошивке:
+Fuse bits used for firmware:
 
 ```text
 lfuse = 0xE3
@@ -140,9 +140,7 @@ hfuse = 0x99
 lock  = 0xFF
 ```
 
-`lock=0xFF` означает, что Flash не заблокирована. Финальную блокировку можно ставить отдельно только после полной проверки устройства.
-
-## Pinout ATmega8A-PU
+`lock=0xFF` means Flash is not blocked. The final blocking can be set separately only after a complete check of the device.## Pinout ATmega8A-PU
 
 `PDIP-28` body, top view, key/notch on top.
 
@@ -390,53 +388,53 @@ The database can be completely cleared and a new master key can be written even 
 1. Install jumper `XP3`.
 2. Hold the `SW` button near `10 секунд` without removing `XP3`.
 3. After the signal, attach a new master key.
-4. The firmware will clear user keys, restore default settings and write the master key.Эта процедура работает из обычного режима и не требует старого мастер-ключа. В сервисном режиме сброс запускается так же: `XP3` плюс удержание `SW`.
+4. The firmware will clear user keys, restore default settings and write the master key.This procedure works from normal mode and does not require the old master key. In service mode, the reset is launched in the same way: `XP3` plus hold `SW`.
 
-После сброса:
+After reset:
 
-- мастер-ключ записан заново;
-- список пользовательских ключей пуст;
-- время открытия возвращается к `5 секундам`;
-- режим замка возвращается к режиму `1`.
-- автосбор ключей выключается.
+- the master key is recorded again;
+- the list of user keys is empty;
+- opening time returns to `5 секундам`;
+- the lock mode returns to the `1` mode.
+- automatic key collection is turned off.
 
-## Сигналы
+## Signals
 
-| Событие | Сигнал |
+| Event | Signal |
 | --- | --- |
-| Вход в сервисный режим | `3` длинных |
-| Выход из сервисного режима | `2` длинных |
-| Пункт меню | `1..5` коротких |
-| Выбор пункта меню | `1` длинный |
-| Ключ добавлен | `1` длинный |
-| Ключ уже есть | `2` коротких |
-| Ключ удалён | `1` короткий |
-| Ключ не найден при удалении | `2` коротких |
-| Отказ неизвестному ключу | `2` коротких + `2` длинных |
-| Ошибка операции | частая трель |
-| Сохранение времени открытия | `2` коротких |
-| Сохранение режима замка | `1` длинный + номер режима |
+| Entering service mode | `3` long |
+| Exiting service mode | `2` long |
+| Menu item | `1..5` short |
+| Selecting a menu item | `1` long |
+| Key added | `1` long |
+| The key is already there | `2` short |
+| Key removed | `1` short |
+| Key not found during deletion | `2` short |
+| Failure to unknown key | `2` short + `2` long |
+| Operation error | frequent trill |
+| Saving opening time | `2` short |
+| Saving Lock Mode | `1` long + mode number |
 
-## Сборка
+## Assembly
 
-Прошивка собирается обычным AVR toolchain под `ATmega8`:
+The firmware is assembled using the usual AVR toolchain under `ATmega8`:
 
 - `avr-gcc`;
 - `avr-libc`;
 - `avr-objcopy`;
 - `avr-size`;
 - `make`;
-- `avrdude` для прошивки.
+- `avrdude` for firmware.
 
-## # Windows
+## #Windows
 
-Самый простой вариант - пакет ZakKemble AVR-GCC:
+The simplest option is the ZakKemble AVR-GCC package:
 
 ```powershell
 winget install ZakKemble.avr-gcc
 ```
 
-После установки открыть новый PowerShell и проверить инструменты:
+After installation, open a new PowerShell and check the tools:
 
 ```powershell
 avr-gcc --version
@@ -444,26 +442,26 @@ make --version
 avrdude -?
 ```
 
-Если `make` или `avrdude` не находятся, добавить каталог `bin` установленного AVR-GCC в `PATH` или запускать инструменты по полному пути. Для пакета из `winget` путь обычно похож на:
+If `make` or `avrdude` are not found, add the `bin` directory of the AVR-GCC installation to `PATH` or run the tools in the full path. For a package from `winget` the path is usually something like:
 
 ```powershell
 $env:LOCALAPPDATA\Microsoft\WinGet\Packages\ZakKemble.avr-gcc_Microsoft.Winget.Source_8wekyb3d8bbwe\avr-gcc-14.1.0-x64-windows\bin
 ```
 
-Сборка:
+Assembly:
 
 ```powershell
 make
 ```
 
-Очистка и повторная сборка:
+Cleaning and reassembly:
 
 ```powershell
 make clean
 make
 ```
 
-## # Linux
+## #Linux
 
 Debian/Ubuntu:
 
@@ -484,19 +482,19 @@ Fedora:
 sudo dnf install avr-gcc avr-libc avr-binutils make avrdude srecord
 ```
 
-Сборка:
+Assembly:
 
 ```bash
 make clean
 make
 ```
 
-Результат сборки:
+Build result:
 
-- `TC-01.elf` - ELF-файл для отладки и просмотра размера;
-- `TC-01.hex` - Intel HEX для записи во Flash ATmega8A.
+- `TC-01.elf` - ELF file for debugging and viewing the size;
+- `TC-01.hex` - Intel HEX for writing to Flash ATmega8A.
 
-Ожидаемый размер текущей версии:
+Expected size of current version:
 
 ```text
 text = 7294
@@ -506,11 +504,11 @@ dec  = 7299
 hex  = 1c83
 ```
 
-## Разбивка HEX на чанки
+## Breaking HEX into chunks
 
-Обычно прошивку можно писать одним файлом `TC-01.hex`. Чанки нужны только если программатор или схема зависает на длинной записи/проверке, чаще всего это встречается с ArduinoISP.
+Typically, firmware can be written in one file `TC-01.hex`. Chunks are needed only if the programmer or circuit freezes on a long write/check, most often this occurs with ArduinoISP.
 
-Для разбиения удобно использовать `srec_cat` из пакета `srecord`. ATmega8 имеет `8 KB` Flash, поэтому можно разбить файл на блоки по `1 KB`.
+For partitioning, it is convenient to use `srec_cat` from the `srecord` package. ATmega8 has `8 KB` Flash, so you can split the file into `1 KB` blocks.
 
 Windows PowerShell:
 
@@ -540,20 +538,18 @@ srec_cat TC-01.hex -Intel -crop 0x1800 0x1c00 -o chunks/TC-01_1800_1bff.hex -Int
 srec_cat TC-01.hex -Intel -crop 0x1c00 0x2000 -o chunks/TC-01_1c00_1fff.hex -Intel
 ```
 
-Пустые верхние чанки допустимы, если прошивка занимает меньше 8 KB. Для записи блоками первый блок пишется с очисткой чипа, остальные - с `-D`, чтобы не стирать уже записанные страницы.
+Empty upper chunks are acceptable if the firmware takes up less than 8 KB. To write in blocks, the first block is written with the chip cleared, the rest - with `-D`, so as not to erase already written pages.## Прошивка через ArduinoISP
 
-## Firmware via ArduinoISP
+Подготовка Arduino Uno:
 
-Preparing Arduino Uno:
+1. Подключить Arduino Uno к USB.
+2. Открыть Arduino IDE.
+3. Выбрать плату `Arduino Uno`.
+4. Открыть пример `File -> Examples -> 11.ArduinoISP -> ArduinoISP`.
+5. Загрузить скетч в Arduino Uno.
+6. Поставить конденсатор `10 uF` между `RESET` и `GND` Arduino Uno, чтобы Uno не перезагружалась при запуске `avrdude`.
 
-1. Connect Arduino Uno to USB.
-2. Open Arduino IDE.
-3. Select the board `Arduino Uno`.
-4. Open example `File -> Examples -> 11.ArduinoISP -> ArduinoISP`.
-5. Upload the sketch to the Arduino Uno.
-6. Place a capacitor `10 uF` between `RESET` and `GND` Arduino Uno so that the Uno does not reboot when `avrdude` starts.
-
-ISP connection:
+Подключение ISP:
 
 | Arduino Uno | ATmega8A |
 | --- | --- |
@@ -563,15 +559,15 @@ ISP connection:
 | `D13` | `SCK/PB5`, pin 19 |
 | `5V` | `VCC`, pin 7 |
 | `5V` | `AVCC`, pin 20 |
-| `GND` | `GND`, pins 8 and 22 |
+| `GND` | `GND`, pins 8 и 22 |
 
-Ping, fuse and lock:
+Проверка связи, fuse и lock:
 
 ```powershell
 avrdude -c stk500v1 -P COM3 -b 19200 -p m8 -U lfuse:r:-:h -U hfuse:r:-:h -U lock:r:-:h
 ```
 
-Expected:
+Ожидаемо:
 
 ```text
 lfuse = 0xe3
@@ -579,23 +575,23 @@ hfuse = 0x99
 lock  = 0xff
 ```
 
-Regular entry:
+Обычная запись:
 
 ```powershell
 avrdude -c stk500v1 -P COM3 -b 19200 -p m8 -U flash:w:TC-01.hex:i -U lfuse:w:0xE3:m -U hfuse:w:0x99:m
 ```
 
-For Linux, the port usually looks like `/dev/ttyACM0` or `/dev/ttyUSB0`:
+Для Linux порт обычно выглядит как `/dev/ttyACM0` или `/dev/ttyUSB0`:
 
 ```bash
 avrdude -c stk500v1 -P /dev/ttyACM0 -b 19200 -p m8 -U flash:w:TC-01.hex:i -U lfuse:w:0xE3:m -U hfuse:w:0x99:m
 ```
 
-In this circuit, the ArduinoISP may hang on a long Flash read during verify. If verify hangs, use writing in short blocks from the `chunks/` directory with read verification disabled:
+На этой схеме ArduinoISP может зависать при длинном чтении Flash во время verify. Если verify зависает, использовать запись короткими блоками из каталога `chunks/` с отключенной проверкой чтением:
 
-- the first block is written with chip erase;
-- the remaining blocks are written with `-D`;
-- all blocks are written with `-V`.
+- первый блок пишется с chip erase;
+- остальные блоки пишутся с `-D`;
+- все блоки пишутся с `-V`.
 
 Windows PowerShell:
 
@@ -625,19 +621,19 @@ avrdude -c stk500v1 -P /dev/ttyACM0 -b 19200 -p m8 -D -V -U flash:w:chunks/TC-01
 avrdude -c stk500v1 -P /dev/ttyACM0 -b 19200 -p m8 -U lfuse:w:0xE3:m -U hfuse:w:0x99:m
 ```
 
-After recording in blocks, check only the signature, fuse and lock, do not do a long dump/verify Flash.
+После записи блоками проверять только сигнатуру, fuse и lock, не делать длинный dump/verify Flash.
 
-If `avrdude` is installed via the ZakKemble AVR-GCC package and does not find `avrdude.conf`, run with an explicit `-C`, for example:
+Если `avrdude` установлен через пакет ZakKemble AVR-GCC и не находит `avrdude.conf`, запускать с явным `-C`, например:
 
 ```powershell
 avrdude -C "$env:LOCALAPPDATA\Microsoft\WinGet\Packages\ZakKemble.avr-gcc_Microsoft.Winget.Source_8wekyb3d8bbwe\avr-gcc-14.1.0-x64-windows\bin\avrdude.conf" -c stk500v1 -P COM3 -b 19200 -p m8 -U lfuse:r:-:h -U hfuse:r:-:h -U lock:r:-:h
 ```
 
-## Firmware via USBasp / AVRASP / USBASP 2.0
+## Прошивка через USBasp / AVRASP / USBASP 2.0
 
-USBasp, AVRASP and many boards labeled `USBASP 2.0` in `avrdude` are usually used as `usbasp` programmer.
+USBasp, AVRASP и многие платы с надписью `USBASP 2.0` в `avrdude` обычно используются как программатор `usbasp`.
 
-ISP connection:
+Подключение ISP:
 
 | USBasp | ATmega8A |
 | --- | --- |
@@ -645,28 +641,30 @@ ISP connection:
 | `MISO` | `MISO/PB4`, pin 18 |
 | `SCK` | `SCK/PB5`, pin 19 |
 | `RST` / `RESET` | `RESET`, pin 1 |
-| `VCC` | `VCC`, pin 7 and `AVCC`, pin 20 |
-| `GND` | `GND`, pins 8 and 22 |
+| `VCC` | `VCC`, pin 7 и `AVCC`, pin 20 |
+| `GND` | `GND`, pins 8 и 22 |
 
-If the board is powered separately, do not connect `VCC` from the programmer, leave only the common ground `GND`.
+Если плата питается отдельно, не подключать `VCC` от программатора, оставить только общую землю `GND`.
 
-Connection check:
+Проверка связи:
 
 ```powershell
 avrdude -c usbasp -p m8 -U lfuse:r:-:h -U hfuse:r:-:h -U lock:r:-:h
 ```
 
-Write firmware and fuse:
+Запись прошивки и fuse:
 
 ```powershell
 avrdude -c usbasp -p m8 -U flash:w:TC-01.hex:i -U lfuse:w:0xE3:m -U hfuse:w:0x99:m
 ```
 
-On Linux the commands are the same. If a regular user does not have access to USBasp, run via `sudo` or add a udev rule:
+На Linux команды такие же. Если обычный пользователь не имеет доступа к USBasp, запускать через `sudo` или добавить udev-правило:
 
 ```bash
 sudo avrdude -c usbasp -p m8 -U flash:w:TC-01.hex:i -U lfuse:w:0xE3:m -U hfuse:w:0x99:m
-```Если USBasp старый и `avrdude` пишет предупреждение про `cannot set sck period`, это не всегда ошибка. Если связь нестабильна, поставить перемычку `slow SCK` на USBasp или добавить ключ `-B 10`:
+```
+
+Если USBasp старый и `avrdude` пишет предупреждение про `cannot set sck period`, это не всегда ошибка. Если связь нестабильна, поставить перемычку `slow SCK` на USBasp или добавить ключ `-B 10`:
 
 ```bash
 avrdude -c usbasp -B 10 -p m8 -U flash:w:TC-01.hex:i -U lfuse:w:0xE3:m -U hfuse:w:0x99:m
