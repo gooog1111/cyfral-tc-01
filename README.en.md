@@ -13,9 +13,9 @@
 
 
 <!-- STATS_START -->
-<!-- auto-updated by GitHub Actions · 2026-07-10 05:00 UTC -->
+<!-- auto-updated by GitHub Actions · 2026-07-10 06:00 UTC -->
 
-[![Views local](https://img.shields.io/badge/Views_local-51-ff6900?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
+[![Views local](https://img.shields.io/badge/Views_local-52-ff6900?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
 [![Views GitHub](https://img.shields.io/badge/Views_GitHub-23-ff6900?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
 [![Unique visitors](https://img.shields.io/badge/Unique-5-blue?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
 [![Clones](https://img.shields.io/badge/Clones-2197-purple?style=for-the-badge&logo=github)](https://github.com/gooog1111/cyfral-tc-01)
@@ -50,7 +50,7 @@
 
 
 <!-- ISSUES_START -->
-<!-- auto-updated by GitHub Actions · 2026-07-10 05:00 UTC -->
+<!-- auto-updated by GitHub Actions · 2026-07-10 06:00 UTC -->
 
 ## Issues
 
@@ -270,74 +270,76 @@ At startup, a self-diagnosis is performed:
 
 - EEPROM availability is checked;
 - the master key is checked;
-- CRC keys are checked;- checks for the absence of non-empty keys after the first empty cell;
-- the key counter in the header is checked.
+- CRC keys are checked;- проверяется отсутствие непустых ключей после первой пустой ячейки;
+- проверяется счётчик ключей в заголовке.
 
-After three consecutive EEPROM errors, emergency behavior is activated: a correctly read key can open the door according to a common timer.
+После трёх подряд ошибок EEPROM включается аварийное поведение: корректно прочитанный ключ может открыть дверь по общему таймеру.
 
-## Normal mode
+## Обычный режим
 
-When started, the device enters normal mode. The `XP3` jumper to enter the service mode is no longer used.
+При запуске устройство входит в обычный режим. Перемычка `XP3` для входа в сервисный режим больше не используется.
 
-Behavior:
+Поведение:
 
-- while waiting, the red LED flashes periodically;
-- the `SW` button opens the door immediately;
-- briefly applying the master key in normal mode opens the door;
-- holding the master key longer than `5 секунд` activates the service mode;
-- a user key from the database opens the door;
-- an unknown key does not open the door and receives a refusal signal;
-- when auto-collection is turned on, any correct key opens the door, and the unknown one is saved in the database;
-- if the EEPROM is damaged, after several errors the alarm logic is activated.
+- в ожидании периодически мигает красный LED;
+- кнопка `SW` открывает дверь сразу;
+- короткое прикладывание мастер-ключа в обычном режиме открывает дверь;
+- удержание мастер-ключа дольше `5 секунд` включает сервисный режим;
+- пользовательский ключ из базы открывает дверь;
+- неизвестный ключ не открывает дверь и получает сигнал отказа;
+- при включённом автосборе любой корректный ключ открывает дверь, а неизвестный сохраняется в базе;
+- если EEPROM повреждена, после нескольких ошибок включается аварийная логика.
 
-## Service mode
+## Сервисный режим
 
-The service mode is activated by holding the master key for 5 seconds. (jumper `XP3` is not required)
+Сервисный режим включается удержанием мастер-ключа на 5 сек. (перемычка `XP3` не требуется)
 
-Login:
+Вход:
 
-- attach the master key and hold it longer `5 секунд`;
-- upon entry, `3` long beeps sound.
+- приложить мастер-ключ и удерживать его дольше `5 секунд`;
+- при входе звучат `3` длинных сигнала.
 
-In service mode, control is performed with the `SW` button and the master key.
-To exit the service mode, hold the master key again longer than `5 секунд`; output is confirmed by `2` long beeps.
+В сервисном режиме управление выполняется кнопкой `SW` и мастер-ключом.
+Для выхода из сервисного режима снова удерживать мастер-ключ дольше `5 секунд`; выход подтверждается `2` длинными сигналами.
 
-## Service menu
+## Сервисное меню
 
-Entering the menu:
+Вход в меню:
 
-- enter the service mode by holding the master key longer than `5 секунд`;
-- after logging in, the `1` item is immediately announced, the menu is ready to be navigated with the `SW` button.
+- войти в сервисный режим удержанием мастер-ключа дольше `5 секунд`;
+- после входа сразу озвучивается пункт `1`, меню готово к навигации кнопкой `SW`.
 
-Navigation:
+Навигация:
 
-- short press `SW` - next menu item;
-- long press `SW` - select the current item;
-- the points go in a circle;
-- the item number is announced with short signals.
+- короткое нажатие `SW` - следующий пункт меню;
+- длинное нажатие `SW` - выбрать текущий пункт;
+- пункты идут по кругу;
+- номер пункта озвучивается короткими сигналами.
 
-Menu items:
+Пункты меню:
 
-| Item | Signal | Destination |
+| Пункт | Сигнал | Назначение |
 | ---: | --- | --- |
-| 1 | `1` short | adding custom keys |
-| 2 | `2` short | setting opening time |
-| 3 | `3` short | removing user keys |
-| 4 | `4` short | setting the lock mode |
-| 5 | `5` short | setting up automatic key collection |
+| 1 | `1` короткий | добавление пользовательских ключей |
+| 2 | `2` коротких | настройка времени открытия |
+| 3 | `3` коротких | удаление пользовательских ключей |
+| 4 | `4` коротких | настройка режима замка |
+| 5 | `5` коротких | настройка автосбора ключей |
 
-## # Point 1: adding keys
+## # Пункт 1: добавление ключей
+
+После входа в пункт:
+
+- приложить новый ключ;
+- если приложен читаемый, но невалидный RW1990/TM01/RW2004/Dallas-совместимый ключ, прошивка пробует записать в него случайный код, затем перечитать и только после этого добавить в базу;
+- если ключ добавлен, звучит `1` длинный сигнал;
+- если ключ уже есть, звучат `2` коротких;
+- мастер-ключ не добавляется как пользовательский;
+- короткое нажатие `SW` выходит из пункта обратно в меню.
+
+## # Пункт 2: время открытия
 
 After entering the location:
-
-- attach a new key;
-- if a readable but invalid RW1990/TM01/RW2004/Dallas-compatible key is attached, the firmware tries to write a random code into it, then re-read it and only then add it to the database;
-- if the key is added, a long signal sounds `1`;
-- if the key is already there, `2` short sounds;
-- the master key is not added as a user key;
-- short press `SW` exits the item back to the menu.
-
-## # Point 2: opening timeAfter entering the location:
 
 - press `SW` to start the countdown;
 - every second a short signal sounds `1`;
@@ -661,45 +663,45 @@ On Linux the commands are the same. If a regular user does not have access to US
 
 ```bash
 sudo avrdude -c usbasp -p m8 -U flash:w:TC-01.hex:i -U lfuse:w:0xE3:m -U hfuse:w:0x99:m
-```If USBasp is old and `avrdude` writes a warning about `cannot set sck period`, this is not always an error. If the connection is unstable, place the `slow SCK` jumper on USBasp or add the `-B 10` key:
+```Если USBasp старый и `avrdude` пишет предупреждение про `cannot set sck period`, это не всегда ошибка. Если связь нестабильна, поставить перемычку `slow SCK` на USBasp или добавить ключ `-B 10`:
 
 ```bash
 avrdude -c usbasp -B 10 -p m8 -U flash:w:TC-01.hex:i -U lfuse:w:0xE3:m -U hfuse:w:0x99:m
 ```
 
-## Firmware via AVRISP / AVRISP mkII
+## Прошивка через AVRISP / AVRISP mkII
 
-For original Atmel/Microchip AVRISP mkII and compatible programmers, `avrdude` uses `-c avrispmkII`.
+Для оригинального Atmel/Microchip AVRISP mkII и совместимых программаторов в `avrdude` используется `-c avrispmkII`.
 
-Check:
+Проверка:
 
 ```bash
 avrdude -c avrispmkII -P usb -p m8 -U lfuse:r:-:h -U hfuse:r:-:h -U lock:r:-:h
 ```
 
-Entry:
+Запись:
 
 ```bash
 avrdude -c avrispmkII -P usb -p m8 -U flash:w:TC-01.hex:i -U lfuse:w:0xE3:m -U hfuse:w:0x99:m
 ```
 
-If you are using an older AVRISP/STK500 compatible serial programmer, the command usually looks like this:
+Если используется старый последовательный AVRISP/STK500-совместимый программатор, команда обычно выглядит так:
 
 ```bash
 avrdude -c avrisp -P COM3 -b 19200 -p m8 -U flash:w:TC-01.hex:i -U lfuse:w:0xE3:m -U hfuse:w:0x99:m
 ```
 
-On Linux, use your own port instead of `COM3`, for example `/dev/ttyUSB0`.
+На Linux вместо `COM3` использовать свой порт, например `/dev/ttyUSB0`.
 
 ## ST-Link V2
 
-ST-Link V2 does not directly flash `ATmega8A` via AVR ISP. It is designed for STM8/STM32 via SWIM/SWD, while the ATmega8A uses SPI ISP.
+ST-Link V2 напрямую не прошивает `ATmega8A` по AVR ISP. Он рассчитан на STM8/STM32 через SWIM/SWD, а у ATmega8A используется SPI ISP.
 
-You can use ST-Link V2 for this board only if it is flashed with alternative firmware, which turns it into an AVR ISP-compatible programmer. Normally TC-01 requires ArduinoISP, USBasp/AVRASP, AVRISP mkII or other programmer supported by `avrdude` for `-p m8`.
+Использовать ST-Link V2 для этой платы можно только если он перепрошит альтернативной прошивкой, которая превращает его в AVR ISP-совместимый программатор. В обычном состоянии для TC-01 нужны ArduinoISP, USBasp/AVRASP, AVRISP mkII или другой программатор, поддерживаемый `avrdude` для `-p m8`.
 
-## Fuse bits
+## Fuse-биты
 
-The current firmware is designed for an internal RC oscillator around `4 MHz`:
+Текущая прошивка рассчитана на внутренний RC-генератор около `4 MHz`:
 
 ```text
 lfuse = 0xE3
@@ -707,19 +709,19 @@ hfuse = 0x99
 lock  = 0xFF
 ```
 
-Before writing fuse, it is advisable to first read the current values. Invalid fuse may disable the ISP or select an unconnected clock source.
+Перед записью fuse желательно сначала прочитать текущие значения. Неверные fuse могут отключить ISP или выбрать неподключенный источник тактирования.
 
 ![Расстановка fuse-бит](fuse.jpg)
 
-## Lock diagnostics
+## Диагностика замка
 
-If the electromagnetic lock does not hold
+Если электромагнитный замок не держит
 
-1. Make sure that in step 4 the `1` mode is saved.
-2. Measure the voltage directly at the magnet terminals with the magnet connected.
-3. Measure `PC1/LOCK`, pin 24 ATmega8A:
-   - in standby mode `1` should be about `0 V`;
-   - when opening it should be about `5 V`.
-4. If the `PC1` switches correctly and the magnet is weak, look for a problem in the power supply, power transistor, wiring, ground, the magnet itself, or the mating part.
+1. Убедиться, что в пункте 4 сохранён режим `1`.
+2. Измерить напряжение прямо на клеммах магнита при подключённом магните.
+3. Измерить `PC1/LOCK`, pin 24 ATmega8A:
+   - в режиме ожидания режима `1` должно быть около `0 V`;
+   - при открытии должно быть около `5 V`.
+4. Если `PC1` переключается правильно, а магнит слабый, искать проблему в питании, силовом транзисторе, проводке, земле, самом магните или ответной части.
 
-The firmware does not use PWM for the lock. The `LOCK` output is kept constantly in one state and switches only during the opening time.
+Прошивка не использует ШИМ для замка. Выход `LOCK` держится постоянно в одном состоянии и переключается только на время открытия.
