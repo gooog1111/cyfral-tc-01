@@ -504,21 +504,41 @@ uint8_t mk_rx(chunk* data)
 /*************************************************************************	
   Читает ключи Dallas. 0 - ключ прочитан в data
 *************************************************************************/
-uint8_t ds_reset()
+
+	uint8_t ds_reset()
 {
-	uint8_t result = 0;
+	uint8_t timeout;
+
 	DDRB |= TD;
 	ds_450us();
 	ds_450us();
 	DDRB &= ~TD;
-	ds_5us();
-	ds_5us();
-	if(!(PINB & TD)) result = 1;
-	ds_70us();
-	if(PINB & TD) result = 1;
-	ds_450us();
-	if(!(PINB & TD)) result = 1;
-	return result;
+
+	/* Линия должна сначала подняться после reset */
+	timeout = 8;
+	while(!(PINB & TD) && timeout){
+		ds_5us();
+		timeout--;
+	}
+	if(!timeout) return 1;
+
+	/* Ожидаем начало presence pulse */
+	timeout = 24;
+	while((PINB & TD) && timeout){
+		ds_5us();
+		timeout--;
+	}
+	if(!timeout) return 1;
+
+	/* Ожидаем окончание presence pulse */
+	timeout = 60;
+	while(!(PINB & TD) && timeout){
+		ds_5us();
+		timeout--;
+	}
+	if(!timeout) return 1;
+
+	return 0;
 }
 
 void ds_write_bit(uint8_t bit)
