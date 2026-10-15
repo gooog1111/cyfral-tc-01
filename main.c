@@ -975,6 +975,7 @@ uint8_t storage_diag()
 	if(i2c_read_c64(MASTER_KEY_ADDR,master.bytes)) return 1;
 	if(key_bad(&master)) return 2;
 	for(uint16_t address=USER_KEYS_ADDR;address<EEPROM_END_ADDR;address+=4){
+		wdt_reset();
 		if(i2c_read_c64(address,buffer.bytes)) return 1;
 		if(key_blank(&buffer)){
 			blank = 1;
@@ -984,7 +985,6 @@ uint8_t storage_diag()
 		if(key_bad(&buffer)) return 3;
 		if(!chunk_compare(&master,&buffer)) return 4;
 		count++;
-		wdt_reset();
 	}
 	if(count > MAX_USER_KEYS) return 5;
 	if(count != header_count) return 5;
